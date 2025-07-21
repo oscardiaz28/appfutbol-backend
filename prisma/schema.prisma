@@ -69,6 +69,7 @@ model roles {
   id     Int     @id @default(autoincrement())
   nombre String  @unique(map: "nombre") @db.VarChar(50)
   users  users[]
+  permissions RolePermission[]
 }
 
 model types_evaluation {
@@ -78,6 +79,21 @@ model types_evaluation {
   estado                Boolean?                @default(true)
   evaluations           evaluations[]
   parameters_evaluation parameters_evaluation[]
+}
+
+model Permission{
+  id Int @id @default(autoincrement())
+  name String @unique
+  description String?
+  roles RolePermission[]
+}
+
+model RolePermission{
+  roleId Int
+  permissionId Int
+  role roles @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+  @@id([roleId, permissionId])
 }
 
 model users {
@@ -95,3 +111,4 @@ model users {
 
   @@index([rol_id], map: "rol_id")
 }
+

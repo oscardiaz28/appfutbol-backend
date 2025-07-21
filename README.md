@@ -19,13 +19,18 @@ npm install
 - DATABASE_URL=
 - JWT_SECRET=
 
-#### 3. Generar el Prisma Client
+#### 3. Aplicar las migraciones en la base de datos
+``` 
+npx prisma migrate deploy
+```
+
+#### 4. Generar el Prisma Client
 
 ``` 
 npx prisma generate
 ``` 
 
-#### 4. Levantar el servidor
+#### 5. Levantar el servidor
 
 ``` 
 npm run dev

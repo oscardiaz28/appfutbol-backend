@@ -9,6 +9,7 @@ import { typeEvaluationRoutes } from './routes/type-evaluation.route';
 import { evaluationRoutes } from './routes/evaluation.route';
 import swaggerUI from 'swagger-ui-express';
 import swaggerSetup from './docs/swagger';
+import { rolRoutes } from './routes/rol.route';
 
 dotenv.config()
 const PORT = process.env.PORT || 5000
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/players", playerRoutes)
 app.use("/api/type-evaluation", typeEvaluationRoutes)
 app.use("/api/evaluations", evaluationRoutes)
+app.use("/api/roles", rolRoutes)
 // app.use("/api/expenses", )
 // app.use("/api/users", )
 

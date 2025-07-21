@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model details_evaluation {
+  id                    Int                   @id @default(autoincrement())
+  evaluation_id         Int
+  parameter_id          Int
+  value                 Int
+  evaluations           evaluations           @relation(fields: [evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "details_evaluation_ibfk_1")
+  parameters_evaluation parameters_evaluation @relation(fields: [parameter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "details_evaluation_ibfk_2")
+
+  @@index([evaluation_id], map: "evaluation_id")
+  @@index([parameter_id], map: "parameter_id")
+}
+
+model evaluations {
+  id                 Int                  @id @default(autoincrement())
+  player_id          Int
+  type_evaluation_id Int?
+  fecha              DateTime?            @default(now()) @db.Timestamp(0)
+  details_evaluation details_evaluation[]
+  players            players              @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evaluations_ibfk_1")
+  types_evaluation   types_evaluation?    @relation(fields: [type_evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evaluations_ibfk_2")
+
+  @@index([player_id], map: "player_id")
+  @@index([type_evaluation_id], map: "type_evaluation_id")
+}
+
+model parameters_evaluation {
+  id                 Int                  @id @default(autoincrement())
+  nombre             String               @db.VarChar(50)
+  descripcion        String?              @db.Text
+  type_id            Int
+  details_evaluation details_evaluation[]
+  types_evaluation   types_evaluation     @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parameters_evaluation_ibfk_1")
+
+  @@index([type_id], map: "type_id")
+}
+
+model players {
+  id               Int           @id @default(autoincrement())
+  nombre           String        @db.VarChar(50)
+  apellido         String        @db.VarChar(50)
+  fecha_nacimiento DateTime      @db.Date
+  fecha_registro   DateTime?     @db.Date
+  identificacion   String        @db.VarChar(50)
+  pais             String        @db.VarChar(50)
+  monto            Decimal?      @default(0.00) @db.Decimal(10, 2)
+  talla            Decimal?      @db.Decimal(3, 2)
+  peso             Decimal?      @db.Decimal(5, 2)
+  pie_habil        String?       @db.VarChar(50)
+  posicion         String?       @db.VarChar(50)
+  user_id          Int?
+  activo           Boolean?      @default(true)
+  prospecto        Boolean?      @default(false)
+  evaluations      evaluations[]
+  users            users?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model roles {
+  id     Int     @id @default(autoincrement())
+  nombre String  @unique(map: "nombre") @db.VarChar(50)
+  users  users[]
+}
+
+model types_evaluation {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(50)
+  icono                 String?                 @db.VarChar(50)
+  estado                Boolean?                @default(true)
+  evaluations           evaluations[]
+  parameters_evaluation parameters_evaluation[]
+}
+
+model users {
+  id             Int       @id @default(autoincrement())
+  username       String    @unique(map: "username") @db.VarChar(100)
+  email          String    @unique(map: "email") @db.VarChar(100)
+  password       String    @db.VarChar(100)
+  foto           String?   @db.VarChar(100)
+  rol_id         Int
+  fecha_registro DateTime? @default(now()) @db.Timestamp(0)
+  nombre         String    @db.VarChar(45)
+  apellido       String    @db.VarChar(45)
+  players        players[]
+  roles          roles     @relation(fields: [rol_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+
+  @@index([rol_id], map: "rol_id")
+}

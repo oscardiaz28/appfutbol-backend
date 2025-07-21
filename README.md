@@ -36,3 +36,49 @@ npx prisma generate
 npm run dev
 ``` 
 
+<br>
+
+
+## 🚀 Despliegue
+
+Sigue estos pasos para preparar y ejecutar el proyecto en un entorno de producción.
+
+### 1. Instalar dependencias
+
+```
+npm install
+```
+
+### 2. Configurar las variables de entorno
+
+Crea un archivo .env con la configuración de producción:
+
+```
+DATABASE_URL=...
+JWT_SECRET=...
+PORT=...
+```
+
+#### 3. Aplicar las migraciones en la base de datos
+``` 
+npx prisma migrate deploy
+```
+
+#### 4. Generar el Prisma Client
+
+``` 
+npx prisma generate
+``` 
+
+#### 5. Compilar el proyecto TypeScript a JavaScript
+
+``` 
+npm run build
+``` 
+
+
+#### 6. Iniciar la aplicación
+
+``` 
+npm start
+``` 

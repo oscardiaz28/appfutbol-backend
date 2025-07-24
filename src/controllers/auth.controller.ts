@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { LoginRequestType } from "../interfaces/types";
 import prisma from "../models/prisma";
 import bcrypt from 'bcryptjs'
-import { generateToken, handleServerError } from "../lib/utils";
+import { generateToken, getMinutes, handleServerError, hashPassword, randomToken, sendMail } from "../lib/utils";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 /**
@@ -27,27 +27,155 @@ import { AuthRequest } from "../middlewares/auth.middleware";
     */
 export const login = async (req: Request<{}, {}, LoginRequestType>, res: Response) => {
     const { email } = req.body
-    try{
+    try {
         const user = await prisma.users.findUnique({
-            where: {email: email},
-            omit: {rol_id: true},
-            include: {roles: true}
+            where: { email: email },
+            omit: { rol_id: true },
+            include: { roles: true }
         })
-        if(!user){  
-            return res.status(400).json({message: "Usuario no registrado"})
+        if (!user) {
+            return res.status(400).json({ message: "Usuario no registrado" })
         }
         const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
-        if(!isPasswordCorrect) return res.status(400).json({message: "La contraseña es incorrecta"})
+        if (!isPasswordCorrect) return res.status(400).json({ message: "La contraseña es incorrecta" })
 
         const token = generateToken(user.id)
-        const { password , ...userData} = user
-        res.json({user: userData, token})
+        const { password, ...userData } = user
+        res.json({ user: userData, token })
 
-    }catch(err){
+    } catch (err) {
         return handleServerError(err, "LoginController", res)
     }
 }
 
 export const verifyAuth = (req: AuthRequest, res: Response) => {
     res.status(200).json(req.user)
+}
+
+function validateBody(body: any): string | null {
+    const { email } = body || {};
+    if (email === undefined) {
+        return "El email es obligatorio";
+    }
+    if (typeof email !== 'string') {
+        return "El email debe ser una cadena de texto";
+    }
+    if (email.trim() === "") {
+        return "El email no puede estar vacío";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return "El formato del email no es válido";
+    }
+    return null;
+}
+
+export const olvidePasword = async (req: Request, res: Response) => {
+    if (!req.body || Object.keys(req.body).length == 0) {
+        return res.status(400).json({ message: "El cuerpo de la solicitud es obligatorio" })
+    }
+    const error = validateBody(req.body);
+    if (error) {
+        return res.status(400).json({ message: error })
+    }
+    const { email } = req.body
+
+    const user = await prisma.users.findUnique({ where: { email } })
+    if (!user) {
+        return res.status(400).json({ message: "El email no existe en el sistema" })
+    }
+
+    const token = randomToken();
+    const expires = getMinutes();
+
+    await prisma.token.create({
+        data: {
+            value: token,
+            type: "password_reset",
+            user_id: user.id,
+            expiresAt: expires
+        }
+    })
+
+    const frontendUrl = process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL_PROD
+        : process.env.FRONTEND_URL_DEV;
+
+    await sendMail(user.email, "password_reset", {
+        name: user.nombre,
+        url: `${frontendUrl}/reset-password?token=${token}`,
+        subject: "Recuperación de contraseña"
+    })
+
+    try {
+        res.status(200).json({ message: "Las instrucciones para reestablecer su password se han enviado a su correo" });
+
+    } catch (err) {
+        return handleServerError(err, "olvidePassword", res);
+    }
+}
+
+
+const validateToken = async (token: string, expectedType: string) => {
+    const found = await prisma.token.findFirst({
+        where: { value: token }
+    })
+    if (!found || found.type !== expectedType || found.expiresAt < new Date()) {
+        return null;
+    }
+    return found;
+}
+
+
+export const getResetPassword = async (req: Request, res: Response) => {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Token no enviado" })
+    }
+    try {
+        const validToken = await validateToken(token, "password_reset")
+        if (!validToken) {
+            return res.status(400).json({ message: "El token de recuperación no es válido" });
+        }
+
+        res.json({ message: "El token de recuperación es válido" })
+
+    } catch (err) {
+        return handleServerError(err, "getResetPassword", res);
+    }
+}
+
+export const postResetPassword = async (req: Request, res: Response) => {
+    const { token } = req.query;
+    const {password} = req.body
+
+    if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Token no enviado" })
+    }
+
+    if( !password || password.trim() === "" || typeof password !== "string" ){
+        return res.status(400).json({message: "La nueva contraseña es obligatoria"})
+    }
+
+    try {
+        const validToken = await validateToken(token, "password_reset");
+        if(!validToken){
+            return res.status(400).json({ message: "El token de recuperación no es válido" });
+        }
+
+        const hashedPass = await hashPassword(password);
+
+        await prisma.users.update({
+            where: {id: validToken.user_id},
+            data: { password: hashedPass }
+        })
+
+        await prisma.token.delete({where: {id: validToken.id}})
+
+        res.json({message: "Contraseña actualizada correctamente"})
+
+    } catch (err) {
+        return handleServerError(err, "postResetPassword", res)
+    }
 }

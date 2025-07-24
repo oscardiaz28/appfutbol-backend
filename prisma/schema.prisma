@@ -66,9 +66,9 @@ model players {
 }
 
 model roles {
-  id     Int     @id @default(autoincrement())
-  nombre String  @unique(map: "nombre") @db.VarChar(50)
-  users  users[]
+  id          Int              @id @default(autoincrement())
+  nombre      String           @unique(map: "nombre") @db.VarChar(50)
+  users       users[]
   permissions RolePermission[]
 }
 
@@ -81,18 +81,19 @@ model types_evaluation {
   parameters_evaluation parameters_evaluation[]
 }
 
-model Permission{
-  id Int @id @default(autoincrement())
-  name String @unique
+model Permission {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
   description String?
-  roles RolePermission[]
+  roles       RolePermission[]
 }
 
-model RolePermission{
-  roleId Int
+model RolePermission {
+  roleId       Int
   permissionId Int
-  role roles @relation(fields: [roleId], references: [id])
-  permission Permission @relation(fields: [permissionId], references: [id])
+  role         roles      @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
   @@id([roleId, permissionId])
 }
 
@@ -108,7 +109,16 @@ model users {
   apellido       String    @db.VarChar(45)
   players        players[]
   roles          roles     @relation(fields: [rol_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+  tokens         Token[]
 
   @@index([rol_id], map: "rol_id")
 }
 
+model Token {
+  id        Int      @id @default(autoincrement())
+  value     String   @db.VarChar(100)
+  type      String   @db.VarChar(50)
+  expiresAt DateTime
+  user_id   Int
+  users     users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}

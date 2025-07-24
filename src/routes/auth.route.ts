@@ -1,5 +1,5 @@
 import express from 'express'
-import { login, verifyAuth } from '../controllers/auth.controller'
+import { getResetPassword, login, olvidePasword, postResetPassword, verifyAuth } from '../controllers/auth.controller'
 import { validate } from '../middlewares/validate.middleware'
 import { loginRequestSchema } from '../lib/validations'
 import { checkAuth } from '../middlewares/auth.middleware'
@@ -61,3 +61,9 @@ authRoutes.post("/login", validate(loginRequestSchema), login)
  *         description: "OK"
  */
 authRoutes.get("/verify", checkAuth, verifyAuth)
+
+authRoutes.post("/olvide-password", olvidePasword)
+
+authRoutes.get("/reset-password", getResetPassword)
+
+authRoutes.post("/reset-password", postResetPassword)   

@@ -34,14 +34,14 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
             include: { roles: true }
         })
         if (!user) {
-            return res.status(400).json({ message: "Usuario no registrado" })
+            return res.status(400).json({ success: false, message: "Usuario no registrado" })
         }
         const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
-        if (!isPasswordCorrect) return res.status(400).json({ message: "La contraseña es incorrecta" })
+        if (!isPasswordCorrect) return res.status(400).json({success: false, message: "La contraseña es incorrecta" })
 
         const token = generateToken(user.id)
         const { password, ...userData } = user
-        res.json({ user: userData, token })
+        res.json({ success: true, user: userData, token })
 
     } catch (err) {
         return handleServerError(err, "LoginController", res)
@@ -103,12 +103,12 @@ export const olvidePasword = async (req: Request, res: Response) => {
 
     await sendMail(user.email, "password_reset", {
         name: user.nombre,
-        url: `${frontendUrl}/reset-password?token=${token}`,
+        token,
         subject: "Recuperación de contraseña"
     })
 
     try {
-        res.status(200).json({ message: "Las instrucciones para reestablecer su password se han enviado a su correo" });
+        res.status(200).json({ success: true, message: "Las instrucciones para reestablecer su password se han enviado a su correo" });
 
     } catch (err) {
         return handleServerError(err, "olvidePassword", res);
@@ -127,19 +127,20 @@ const validateToken = async (token: string, expectedType: string) => {
 }
 
 
-export const getResetPassword = async (req: Request, res: Response) => {
-    const { token } = req.query;
-
+export const verifyOtp = async (req: Request, res: Response) => {
+    if(!req.body){
+        return res.status(400).json({message: "El cuerpo de la solicitud es obligatorio"})
+    }
+    const { token } = req.body || {};
     if (!token || typeof token !== 'string') {
-        return res.status(400).json({ message: "Token no enviado" })
+        return res.status(400).json({ success: false, message: "Token no enviado" })
     }
     try {
         const validToken = await validateToken(token, "password_reset")
         if (!validToken) {
-            return res.status(400).json({ message: "El token de recuperación no es válido" });
+            return res.status(400).json({ success: false, message: "El token de recuperación no es válido" });
         }
-
-        res.json({ message: "El token de recuperación es válido" })
+        res.json({ success: true, message: "El token de recuperación es válido" })
 
     } catch (err) {
         return handleServerError(err, "getResetPassword", res);
@@ -147,8 +148,9 @@ export const getResetPassword = async (req: Request, res: Response) => {
 }
 
 export const postResetPassword = async (req: Request, res: Response) => {
-    const { token } = req.query;
-    const {password} = req.body
+    if(!req.body) return res.status(400).json({success: false, message: "El cuerpo de la solicitud es obligatoria"});
+
+    const {token, password} = req.body || {};
 
     if (!token || typeof token !== 'string') {
         return res.status(400).json({ message: "Token no enviado" })
@@ -161,7 +163,7 @@ export const postResetPassword = async (req: Request, res: Response) => {
     try {
         const validToken = await validateToken(token, "password_reset");
         if(!validToken){
-            return res.status(400).json({ message: "El token de recuperación no es válido" });
+            return res.status(400).json({ success: false, message: "El token de recuperación no es válido" });
         }
 
         const hashedPass = await hashPassword(password);
@@ -173,7 +175,7 @@ export const postResetPassword = async (req: Request, res: Response) => {
 
         await prisma.token.delete({where: {id: validToken.id}})
 
-        res.json({message: "Contraseña actualizada correctamente"})
+        res.json({success: true, message: "Contraseña actualizada correctamente"})
 
     } catch (err) {
         return handleServerError(err, "postResetPassword", res)

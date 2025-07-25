@@ -3,7 +3,7 @@ import { ZodTypeAny } from "zod";
 
 export const validate = (schema: ZodTypeAny) => (req: Request, res: Response, next: NextFunction) => {
     if(!req.body || Object.keys(req.body).length == 0){
-        return res.status(400).json({message: "El cuerpo de la solicitud es requerido"})
+        return res.status(400).json({success: false, message: "El cuerpo de la solicitud es requerido"})
     }
     const result = schema.safeParse(req.body)
     if(!result.success){
@@ -11,6 +11,7 @@ export const validate = (schema: ZodTypeAny) => (req: Request, res: Response, ne
             return {field: issue.path[0], message: issue.message}
         } )
         return res.status(400).json({
+            success: false,
             message: "Error en los datos enviados",
             errors: format
         })

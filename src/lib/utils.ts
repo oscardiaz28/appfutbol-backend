@@ -7,8 +7,9 @@ import { transporte } from './mailer';
 
 
 export const randomToken = () => {
-    const myuuid = uuidv4();
-    return myuuid;
+    // const myuuid = uuidv4();
+    // return myuuid;
+    return Math.floor(10000 + Math.random() * 90000).toString(); 
 }
 
 export const generateToken = (userId: number) => {
@@ -32,7 +33,7 @@ export const handleServerError = (err: unknown, context: string, res: Response) 
     } else {
         console.error(`❌ ${context}:`, err)
     }
-    return res.status(500).json({message: "Ha ocurrido un error, intentar mas tarde"})
+    return res.status(500).json({success: false, message: "Ha ocurrido un error, intentar mas tarde"})
 }
 
 export function mapUserToUserType(user: any): UserType{
@@ -53,7 +54,7 @@ export function mapUserToUserType(user: any): UserType{
 
 type EmailData = {
     name: string,
-    url: string,
+    token: string,
     subject: string
 }
 
@@ -61,15 +62,22 @@ export const getEmailTemplate = (type: typeEmail, data: EmailData ) => {
     switch (type){
         case 'password_reset':
             return `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
-                    <h2 style="color: #2a7ae2;">🔐 Recupera tu cuenta</h2>
-                    <p>Hola ${data.name || ''},</p>
-                    <p>Has solicitud restablecer tu contraseña. Haz clic en el botón de abajo.</p>
-                    <a href="${data.url}" style="background-color: #2a7ae2; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
-                        Restablecer contraseña
-                    </a>
-                    <p>Si no lo solicitó, ignore este correo electrónico.</p>
-                </div>
+                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #ddd; border-radius: 8px; background-color: #fafafa;">
+                    <h2 style="color: #2a7ae2; text-align: center;">🔐 Recupera tu cuenta</h2>
+                    <p style="font-size: 16px; color: #333;">Hola <strong>${data.name || ''}</strong>,</p>
+                    <p style="font-size: 16px; color: #333;">
+                        Hemos recibido una solicitud para restablecer tu contraseña. Usa el siguiente código para continuar con el proceso:
+                    </p>
+                    <div style="margin: 30px auto; padding: 15px 25px; background-color: #f1f5fb; color: #2a7ae2; font-size: 24px; font-weight: bold; text-align: center; border-radius: 8px; width: fit-content; border: 1px dashed #2a7ae2;">
+                        ${data.token}
+                    </div>
+                    <p style="font-size: 14px; color: #666;">
+                        Si tú no realizaste esta solicitud, puedes ignorar este correo electrónico.
+                    </p>
+                    <p style="font-size: 13px; color: #aaa; text-align: center; margin-top: 40px;">
+                        © 2025 TuApp. Todos los derechos reservados.
+                    </p>
+                    </div>
             `;
         default:
             return `<p>Unknow email type</p>`;

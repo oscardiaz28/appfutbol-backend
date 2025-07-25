@@ -115,3 +115,21 @@ export const EvaluationRequestSchema = z.object({
     tipoId: z.number("Formato no valido"),
     parametros: z.array(parametroSchema, {message: "Agrega un parametro de evaluación como minimo"}).min(1, {message: "Debes enviar al menos un parametro de evaluación"})
 })
+
+export const UserRequestSchema = z.object({
+    username: z.string({message: "El username es obligatorio"})
+    .trim()
+    .nonempty("El username no puede estar vacio"),
+    email: z.email("Formato no valido para el email")
+    .trim(),
+    nombre: z.string("El nombre es obligatorio")
+    .trim()
+    .nonempty("El nombre no puede estar vacio"),
+    apellido: z.string("El apellido es obligatorio")
+    .trim()
+    .nonempty("El apellido no puede estar vacio"),
+    rol_id: z.number("id no valido"),
+    password: z.string("La contraseña es obligatoria")
+    .trim()
+    .nonempty("La contraseña no puede estar vacia")
+})

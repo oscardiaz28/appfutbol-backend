@@ -1,5 +1,5 @@
 import express from 'express'
-import { getResetPassword, login, olvidePasword, postResetPassword, verifyAuth } from '../controllers/auth.controller'
+import { login, olvidePasword, postResetPassword, verifyAuth, verifyOtp } from '../controllers/auth.controller'
 import { validate } from '../middlewares/validate.middleware'
 import { loginRequestSchema } from '../lib/validations'
 import { checkAuth } from '../middlewares/auth.middleware'
@@ -62,8 +62,120 @@ authRoutes.post("/login", validate(loginRequestSchema), login)
  */
 authRoutes.get("/verify", checkAuth, verifyAuth)
 
+/**
+ * @swagger
+ * /api/auth/olvide-password:
+ *   post:
+ *     tags:
+ *       - Autenticación
+ *     summary: "Generación de codigo de verificación para restablecer contrañaseña"
+ *     description: "Permite a un usuario obtener un codigo de restablecimiento de contraseña"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "john@gmail.com"
+ *             required:
+ *               - email
+ *     responses: 
+ *       200:
+ *         content: 
+ *           application/json:
+ *            schema: 
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                   example: "Las instrucciones para reestablecer su password se han enviado a su correo"
+ *               
+ *         
+ */
 authRoutes.post("/olvide-password", olvidePasword)
 
-authRoutes.get("/reset-password", getResetPassword)
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     tags:
+ *       - Autenticación
+ *     summary: "Verificar codigo de restablecimiento"
+ *     description: "Permite verficar si el codigo de restablecimiento de contraseña es valida"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "11555"
+ *             required:
+ *               - token
+ *     responses: 
+ *       200:
+ *         content: 
+ *           application/json:
+ *            schema: 
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                   example: "El token de recuperación es válido"
+ *               
+ *         
+ */
+authRoutes.post("/verify-otp", verifyOtp)
 
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Autenticación
+ *     summary: "Cambiar contraseña"
+ *     description: "Una vez que se valido el codigo de restablecimiento, se permite cambiar la contraseña"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "11555"
+ *               password:
+ *                 type: string
+ *                 example: "1234"
+ *             required:
+ *               - email
+ *               - password
+ *     responses: 
+ *       200:
+ *         content: 
+ *           application/json:
+ *            schema: 
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message: 
+ *                   type: string
+ *                   example: "Contraseña actualizada correctamente"
+ *               
+ *         
+ */
 authRoutes.post("/reset-password", postResetPassword)   

@@ -9,6 +9,7 @@ const swaggerDefinition : OAS3Definition = {
     servers: [{url: "http://localhost:5000"}],
     tags: [
         {name: "Autenticación"},
+        {name: "Usuarios"},
         {name: "Jugadores"}, 
         {name: "Evaluaciones"}, 
         {name: "Tipo de Evaluaciones"}, 

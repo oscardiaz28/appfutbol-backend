@@ -101,7 +101,7 @@ export const ParameterRequestSchema = z.object({
     descripcion: z.string({message: "La descripción es obligatoria"})
             .trim()
             .nonempty("La descripción no puede estar vacia"),
-    typeId: z.number("Formato no valido")
+    type_id: z.number("Formato no valido")
 })
 
 
@@ -132,4 +132,125 @@ export const UserRequestSchema = z.object({
     password: z.string("La contraseña es obligatoria")
     .trim()
     .nonempty("La contraseña no puede estar vacia")
+})
+
+
+export const PermissionRequestSchema = z.object({
+    name: z.string("El nombre es obligatorio")
+    .trim()
+    .nonempty("El nombre no puede estar vacio"),
+    description: z.string("La descripción es obligatoria")
+    .trim()
+    .nonempty("La descripción no puede estar vacia")
+})
+
+export const UpdateTypeEvaluationSchema = z.object({
+    nombre: z.string("Formato no valido")
+    .trim()
+    .toLowerCase()
+    .nonempty("El campo no puede estar vacio")
+    .optional(),
+    icono: z.string("Formato no valido")
+    .trim()
+    .nonempty("El campo no puede estar vacio")
+    .optional()
+})
+
+export const UpdateParameterSchema = z.object({
+    nombre: z.string("El campo nombre no tiene un formato valido")
+    .trim()
+    .toLowerCase()
+    .nonempty("El campo no puede estar vacio")
+    .optional(),
+    descripcion: z.string("El campo descripcion no tiene un formato valido")
+    .trim()
+    .toLowerCase()
+    .nonempty("El campo no puede estar vacio")
+    .optional(),
+    type_id: z.number("Formato no valido para typeId")
+    .optional()
+})
+
+
+export const AdminUpdateUserSchema = z.object({
+    username: z.string("El campo username no tiene un formato válido")
+    .trim()
+    .optional(),
+    email: z.email("El email no tiene un formato válido")
+    .trim()
+    .optional(),
+    nombre: z.string("El campo nombre no tiene un formato válido")
+    .trim()
+    .optional(),
+    apellido: z.string("El campo apellido no tiene un formato válido")
+    .trim()
+    .optional(),
+    rol_id: z.number("Formato no válido para rol")
+    .optional()
+})
+
+export const ProfileUpdateUserSchema = z.object({
+    username: z.string("El campo username no tiene un formato válido")
+    .trim()
+    .optional(),
+    nombre: z.string("El campo nombre no tiene un formato válido")
+    .trim()
+    .optional(),
+    apellido: z.string("El campo apellido no tiene un formato válido")
+    .trim()
+    .optional()
+})
+
+
+export const GastoRequestSchema = z.object({
+    player_id: z.number("Id no valido para player"),
+    monto: z.string("Campo no valido para monto")
+    .trim()
+    .nonempty("El monto no puede estar vacio")
+    .refine( val => val === undefined || !isNaN(parseInt(val)), {
+        message: "Valor de monto no válido"
+    }),
+    descripcion: z.string("La descripcion es obligatoria")
+    .trim()
+    .nonempty("La descripcion no puede estar vacia"),
+    fecha: z.string("La fecha no es válida")
+    .refine( val => val === undefined || !isNaN(Date.parse(val)), {
+        message: "La fecha no es válida"
+    }),
+})
+
+
+export const EditGastoRequestSchema = z.object({
+    monto: z.string("Valor no valido para el monto")
+    .trim()
+    .nonempty("El monto no puede estar vacio")
+    .optional(),
+    descripcion: z.string("Valor no valido para la descripcion")
+    .trim()
+    .nonempty("La descripción es obligatoria")
+    .optional()
+})
+
+export const UpdatePermissionRequestSchema = z.object({
+    name: z.string("El nombre es obligatorio")
+    .trim()
+    .nonempty("El nombre no puede estar vacio")
+    .optional(),
+    description: z.string("La descripción es obligatoria")
+    .trim()
+    .nonempty("La descripción no puede estar vacia")
+    .optional()
+})
+
+
+export const ChangePasswordRequestSchema = z.object({
+    current_password: z.string("La contraseña actual es obligatoria")
+    .trim()
+    .nonempty("El campo no puede estar vacio"),
+    new_password: z.string("La nueva contraseña es obligatoria")
+    .trim()
+    .nonempty("El campo no puede estar vacio"),
+    repeat_new_password: z.string("El campo es obligatorio")
+    .trim()
+    .nonempty("El campo no puede estar vacio")
 })

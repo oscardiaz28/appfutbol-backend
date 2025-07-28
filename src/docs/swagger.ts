@@ -13,6 +13,9 @@ const swaggerDefinition : OAS3Definition = {
         {name: "Jugadores"}, 
         {name: "Evaluaciones"}, 
         {name: "Tipo de Evaluaciones"}, 
+        {name: "Gastos"},
+        {name: "Permisos"},
+        {name: "Roles"}
     ]
 }
 

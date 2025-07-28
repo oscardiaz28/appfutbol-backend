@@ -3,7 +3,7 @@ import { handleServerError } from "../lib/utils";
 import { PlayerRequestType, UpdatePlayerType } from "../interfaces/types";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../models/prisma";
-import { players } from "@prisma/client";
+import { players, Prisma } from "@prisma/client";
 
 export const addPlayer = async (req: AuthRequest<PlayerRequestType>, res: Response) => {
     const { user } = req
@@ -30,7 +30,8 @@ export const addPlayer = async (req: AuthRequest<PlayerRequestType>, res: Respon
                 user_id: user?.id
             }
         })
-        res.json(newPlayer)
+        // res.json(newPlayer)
+        res.json({success: true, message: "Jugador registrado exitosamente"})
 
     } catch (err) {
         return handleServerError(err, "addPlayerController", res)
@@ -136,7 +137,8 @@ export const editPlayer = async (req: Request<{}, {}, UpdatePlayerType>, res: Re
             data: req.body
         })
 
-        res.json(updated)
+        // res.json(updated)
+        res.json({success: true, message: "Jugador editado correctamente"})
 
     }catch(err){
         return handleServerError(err, "editPlayer", res)
@@ -157,7 +159,10 @@ export const deletePlayer = async (req: Request, res: Response) => {
             where: {id}
         })
         res.json({message: "Jugador eliminado correctamente"})
-    }catch(err){
+    }catch(err: any){
+        if (err.code == 'P2003') {
+            return res.status(400).json({ message: "No se ha podido eliminar el jugador, tienes registros asociados" })
+        }
         return handleServerError(err, "deletePlayer", res)
     }
 }
@@ -212,25 +217,129 @@ export const getPlayerEvaluations = async (req: Request, res: Response) => {
     if(isNaN(id)){
         return res.status(400).json({message: "El ID no es válido"})
     }
+    let page = parseInt(req.query.page as string) || 1
+    let size = parseInt(req.query.size as string) || 5
+
+    if(isNaN(page) || page < 1) page = 1
+    if(isNaN(size) || size < 1) size = 5
+
     try{
         const player = await prisma.players.findUnique({where: {id}})
         if(!player) return res.status(400).json({message: "Jugador no encontrado"})
+
+        const skip = (page - 1) * size
         
-        const evaluations = await prisma.evaluations.findMany({
-            where: {
-                player_id: id
-            },
-            omit: {type_evaluation_id: true},
-            include: {
-                types_evaluation: true,
-                details_evaluation: {
-                    include: {parameters_evaluation: true},
-                    omit: {evaluation_id: true, parameter_id: true}
-                }
-            }
+        const [data, totalItems] = await Promise.all([
+            prisma.evaluations.findMany({
+                skip,
+                take: size,
+                where: {
+                    player_id: id
+                },
+                omit: {type_evaluation_id: true},
+                include: {
+                    types_evaluation: true,
+                    details_evaluation: {
+                        include: {parameters_evaluation: true},
+                        omit: {evaluation_id: true, parameter_id: true}
+                    }
+                },
+                orderBy: {fecha: 'desc'}
+            }),
+            prisma.evaluations.count()
+        ])
+
+        const totalPages = Math.ceil( totalItems / size )
+
+         res.json({
+            totalItems,
+            totalPages,
+            currentPage: page,
+            size,
+            data
         })
-        res.json(evaluations)
+
     }catch(err){
         return handleServerError(err, "setPlayerStatus", res)
+    }
+}
+
+const getTopByParameter = async (parametro: string, page: number, size: number) => {
+    const offset = (page -1 ) * size;
+
+    const totalItemsResult = await prisma.$queryRaw<{ total_items: number }[]>(Prisma.sql`
+        SELECT COUNT(DISTINCT p.id) AS total_items
+        FROM players p
+        JOIN evaluations e ON e.player_id = p.id
+        JOIN details_evaluation d ON d.evaluation_id = e.id
+        JOIN parameters_evaluation pe ON pe.id = d.parameter_id
+        WHERE pe.nombre = ${parametro}
+    `);
+
+    const totalItems = Number(totalItemsResult[0]?.total_items) || 0;
+    const totalPages = Math.ceil(totalItems / size);
+
+    const results = await prisma.$queryRaw(Prisma.sql`
+        SELECT
+        p.id AS player_id,
+        p.nombre AS nombre,
+        p.apellido as apellido,
+        p.posicion as posicion,
+        pe.nombre as parametro,
+        avg(d.value) as value
+        FROM players p
+        INNER JOIN evaluations e ON e.player_id = p.id
+        INNER JOIN details_evaluation d ON d.evaluation_id = e.id
+        INNER JOIN parameters_evaluation pe ON pe.id = d.parameter_id
+        WHERE pe.nombre = ${parametro}
+        GROUP BY p.id, p.nombre, p.apellido, p.posicion, pe.nombre
+        ORDER BY value DESC
+        LIMIT ${Prisma.raw(String(size))} OFFSET ${Prisma.raw(String(offset))}
+        `)
+
+    return {
+        currentPage: page,
+        pageSize: size,
+        totalItems,
+        totalPages,
+        results
+    };
+}
+
+// CORREGIR - OBTENER EL TOP DE LA TABLA EVALUATIONS
+export const topPlayers = async (req: Request, res: Response) =>{
+
+    let page = parseInt(req.query.page as string) || 1
+    let size = parseInt(req.query.size as string) || 5
+    const orderBy = req.query.orderBy as string || "velocidad"
+
+    if( isNaN(page) || page < 1 ) page = 1
+    if( isNaN(size) || size < 1 ) size = 5
+
+    try{
+        const data = await getTopByParameter(orderBy, page, size)
+        res.json(data)
+
+    }catch(err){
+        return handleServerError(err, "topPlayers", res)
+    }
+}
+
+export const getPlayerGastos = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id)
+    if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
+    try{
+        const player = await prisma.players.findUnique({where: {id}})
+        if(!player) return res.status(400).json({success: false, message: "El jugador no existe"})
+
+        const gastos = await prisma.gasto.findMany({
+            where: {player_id: player.id},
+            orderBy: {fecha: 'desc'}
+        })
+        
+        res.json(gastos)
+
+    }catch(err){
+        return handleServerError(err, "getPlayerGastos", res)
     }
 }

@@ -1,10 +1,12 @@
 import { Request, Response } from "express"
 import { handleServerError } from "../lib/utils"
 import prisma from "../models/prisma"
+import { success } from "zod"
 
 export const createEvaluation = async (req: Request, res: Response) => {
     const { playerId, tipoId, parametros } = req.body
     try{
+
         const player = await prisma.players.findUnique({where: {id: parseInt(playerId)}})
         if(!player) return res.status(400).json({message: "El jugador no existe"})
         const type = await prisma.types_evaluation.findUnique({where: {id: parseInt(tipoId)}})
@@ -16,7 +18,6 @@ export const createEvaluation = async (req: Request, res: Response) => {
                 type_evaluation_id: parseInt(tipoId)
             }
         })
-
         const params = parametros.map( (p: any) => ({
             evaluation_id: evaluacion.id,
             parameter_id: p.parametroId,
@@ -24,7 +25,8 @@ export const createEvaluation = async (req: Request, res: Response) => {
         }))
         await prisma.details_evaluation.createMany({data: params})
 
-        res.json(evaluacion)
+        // res.json(evaluacion)
+        res.json({success: true, message: "Evaluacion realizada correctamente"})
 
     }catch(err){
         return handleServerError(err, "createEvaluation", res)
@@ -60,9 +62,51 @@ export const editEvaluation = async (req: Request, res: Response) => {
                 data: {value: valor}
             })
         }
-        res.json({message: "Parametros actualizados correctamente"})
+        res.json({success: true, message: "Parametros actualizados correctamente"})
 
     }catch(err){
         return handleServerError(err, "editEvaluation", res)
+    }
+}
+
+
+export const deleteEvaluation = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id)
+    if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
+    try{
+        const evaluation = await prisma.evaluations.findUnique({where: {id}})
+        if(!evaluation) return res.status(400).json({success: false, message: "La evaluación no existe"})
+
+        await prisma.evaluations.delete({where: {id}})
+        res.json({success: true, message: "Evaluación eliminada correctamente"})
+
+    }catch(err){
+        return handleServerError(err, "deleteEvaluation", res)
+    }
+}
+
+
+export const getOneEvaluation = async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id)
+    if(isNaN(id)) return res.status(400).json({success: true, message: "El ID no es válido"})
+    try{
+        const evaluation = await prisma.evaluations.findUnique({
+            where: {id},
+            omit: {type_evaluation_id: true, player_id: true},
+            include: {
+                players: {select: {id: true, nombre: true, apellido: true, posicion: true}},
+                types_evaluation: true,
+                details_evaluation: {
+                    omit: {evaluation_id: true, parameter_id: true},
+                    include: {parameters_evaluation: true}
+                }
+            }
+        })
+        if(!evaluation) return res.status(400).json({success: false, message: "La evaluación no existe"})
+
+        res.json(evaluation)
+
+    }catch(err){
+        return handleServerError(err, "getOneEvaluation", res)
     }
 }

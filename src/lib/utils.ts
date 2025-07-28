@@ -1,15 +1,18 @@
 import bcrypt from 'bcryptjs'
 import { Response } from 'express'
 import jwt from 'jsonwebtoken'
-import { UserType } from '../interfaces/types'
-import { v4 as uuidv4 } from 'uuid';
 import { transporte } from './mailer';
+import { UserType } from '../interfaces/types';
 
 
 export const randomToken = () => {
     // const myuuid = uuidv4();
     // return myuuid;
     return Math.floor(10000 + Math.random() * 90000).toString(); 
+}
+
+export const hasAdminRole = (user?: UserType) => {
+    return user?.rol.nombre === "admin"
 }
 
 export const generateToken = (userId: number) => {
@@ -34,22 +37,6 @@ export const handleServerError = (err: unknown, context: string, res: Response) 
         console.error(`❌ ${context}:`, err)
     }
     return res.status(500).json({success: false, message: "Ha ocurrido un error, intentar mas tarde"})
-}
-
-export function mapUserToUserType(user: any): UserType{
-    return {
-        id: Number(user.id),
-        username: user.username,
-        email: user.email,
-        foto: user.foto ?? null,
-        fecha_registro: user.fecha_registro,
-        nombre: user.nombre,
-        apellido: user.apellido,
-        roles: {
-            id: user.roles?.id,
-            nombre: user.roles?.nombre
-        }
-    }
 }
 
 type EmailData = {
@@ -100,4 +87,9 @@ export const sendMail = async ( to: string, typeEmail: typeEmail, data: EmailDat
         html: htmlContent
     }
     await transporte.sendMail(mailOptions);
+}
+
+
+export const rolWithPermissionInclude = {
+    permissions: { omit: {roleId: true, permissionId: true}, include: {permission: true} }
 }

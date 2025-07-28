@@ -11,6 +11,8 @@ import swaggerUI from 'swagger-ui-express';
 import swaggerSetup from './docs/swagger';
 import { rolRoutes } from './routes/rol.route';
 import { userRoutes } from './routes/user.route';
+import { permissionRoutes } from './routes/permission.route';
+import { expenseRoutes } from './routes/expense.route';
 
 dotenv.config()
 const PORT = process.env.PORT || 5000
@@ -29,12 +31,12 @@ app.use("/api/auth", authRoutes)
 app.use("/api/players", playerRoutes)
 app.use("/api/type-evaluation", typeEvaluationRoutes)
 app.use("/api/evaluations", evaluationRoutes)
+
 app.use("/api/roles", rolRoutes)
+app.use("/api/permissions", permissionRoutes)
 app.use("/api/users", userRoutes)
 
-
-// app.use("/api/expenses", )
-// app.use("/api/users", )
+app.use("/api/expenses", expenseRoutes)
 
 app.use( (req: Request, res: Response) =>{
     res.status(400).json({message: "Ruta no encontrada"})

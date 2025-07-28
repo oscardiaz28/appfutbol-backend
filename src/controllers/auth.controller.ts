@@ -31,8 +31,17 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
         const user = await prisma.users.findUnique({
             where: { email: email },
             omit: { rol_id: true },
-            include: { roles: true }
+            include: { roles: {
+                include: {permissions: {
+                    omit: {roleId: true, permissionId: true},
+                    include: {permission: {
+                        select: { name: true }
+                    }}
+                } }
+            }}
         })
+        const permissions = user?.roles.permissions?.map( item => item.permission.name  )
+
         if (!user) {
             return res.status(400).json({ success: false, message: "Usuario no registrado" })
         }
@@ -40,8 +49,23 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
         if (!isPasswordCorrect) return res.status(400).json({success: false, message: "La contraseña es incorrecta" })
 
         const token = generateToken(user.id)
-        const { password, ...userData } = user
-        res.json({ success: true, user: userData, token })
+
+        const response = {
+            id: user.id,
+            username: user.username,
+            nombre: user.nombre,
+            apellido: user.apellido,
+            email: user.email,
+            foto: user.foto,
+            fecha_registro: user.fecha_registro,
+            rol: {
+                id: user.roles.id,
+                nombre: user.roles.nombre
+            },
+            permissions: permissions
+        }
+        
+        res.json({ success: true, user: response, token })
 
     } catch (err) {
         return handleServerError(err, "LoginController", res)

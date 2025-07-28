@@ -16,6 +16,8 @@ npm install
 ```
 #### 2. Configura tus variables de entorno en un archivo .env
 
+Crea un archivo .env con la configuración de producción:
+
 - DATABASE_URL=
 - JWT_SECRET=
 

@@ -35,17 +35,56 @@ export const authRoutes = express.Router()
  *         description: "Inicio de Sesión exitoso"
  *         content: 
  *           application/json:
- *            schema: 
+ *             schema: 
  *               type: object
  *               properties:
  *                 user:
  *                   type: object
- *                   example: {}
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 2
+ *                     username:
+ *                       type: string
+ *                       example: oscar28
+ *                     email:
+ *                       type: string
+ *                       example: diazvargasod@gmail.com
+ *                     foto:
+ *                       type: string
+ *                       nullable: true
+ *                       example: null
+ *                     fecha_registro:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-07-23T18:41:49.000Z"
+ *                     nombre:
+ *                       type: string
+ *                       example: Oscar
+ *                     apellido:
+ *                       type: string
+ *                       example: Diaz
+ *                     rol:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 2
+ *                         nombre:
+ *                           type: string
+ *                           example: entrenador
+ *                     permissions:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example:
+ *                         - manage_players
+ *                         - evaluate_player
+ *                         - manage_expenses
+ *                         - view_player_reports
  *                 token: 
  *                   type: string
  *                   example: "token-generado"
- *               
- *         
  */
 authRoutes.post("/login", validate(loginRequestSchema), login)
 
@@ -55,10 +94,58 @@ authRoutes.post("/login", validate(loginRequestSchema), login)
  *   get:
  *     tags:
  *       - Autenticación
- *     summary: "Verificacion de usuario autenticado"
+ *     summary: Verificación de usuario autenticado
  *     responses: 
  *       200:
- *         description: "OK"
+ *         description: Usuario autenticado
+ *         content: 
+ *           application/json:
+ *             schema: 
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 2
+ *                 username:
+ *                   type: string
+ *                   example: oscar28
+ *                 email:
+ *                   type: string
+ *                   example: diazvargasod@gmail.com
+ *                 foto:
+ *                   type: string
+ *                   nullable: true
+ *                   example: null
+ *                 fecha_registro:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-23T18:41:49.000Z"
+ *                 nombre:
+ *                   type: string
+ *                   example: Oscar
+ *                 apellido:
+ *                   type: string
+ *                   example: Diaz
+ *                 rol:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 2
+ *                     nombre:
+ *                       type: string
+ *                       example: entrenador
+ *                 permissions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example:
+ *                     - manage_players
+ *                     - evaluate_player
+ *                     - manage_expenses
+ *                     - view_player_reports
+ *       401:
+ *         description: Usuario no autenticado
  */
 authRoutes.get("/verify", checkAuth, verifyAuth)
 

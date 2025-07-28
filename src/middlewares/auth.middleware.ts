@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from 'jsonwebtoken'
 import prisma from "../models/prisma";
-import { UserType } from "../interfaces/types";
+import { RoleType, UserType } from "../interfaces/types";
 
 type DecodedType = {
     userId: string
@@ -20,13 +20,41 @@ export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunct
     const token = authorization.split(" ")[1];
     try{
         const decoded = <DecodedType>jwt.verify(token, <string>process.env.JWT_SECRET)
+        
         const user = await prisma.users.findUnique({
-            where: {id: parseInt(decoded.userId) },
-            omit: {password: true},
-            include: {roles: true}
+            where: { id: parseInt(decoded.userId) },
+            omit: { rol_id: true, password: true },
+            include: { roles: {
+                include: {permissions: {
+                    omit: {roleId: true, permissionId: true},
+                    include: {permission: {
+                        select: { name: true }
+                    }}
+                } }
+            }}
         })
-        if(!user) return res.status(400).json({message: "User not found"})
-        req.user = user
+        const permissions = user?.roles.permissions?.map( item => item.permission.name  ) || []
+
+        if(!user) return res.status(400).json({message: "El usuario no ha sido encontrado"})
+
+        const rol: RoleType = {
+            id: user.roles.id,
+            nombre: user.roles.nombre
+        }
+
+        const resp: UserType = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            foto: user.foto,
+            fecha_registro: user.fecha_registro,
+            nombre: user.nombre,
+            apellido: user.apellido,
+            rol,
+            permissions
+        }
+        req.user = resp
+
         next()
     }catch(err){
         res.status(400).json({message: "Token inválido"})

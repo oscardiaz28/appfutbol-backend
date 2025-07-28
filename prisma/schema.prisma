@@ -12,7 +12,7 @@ model details_evaluation {
   evaluation_id         Int
   parameter_id          Int
   value                 Int
-  evaluations           evaluations           @relation(fields: [evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "details_evaluation_ibfk_1")
+  evaluations           evaluations           @relation(fields: [evaluation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "details_evaluation_ibfk_1")
   parameters_evaluation parameters_evaluation @relation(fields: [parameter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "details_evaluation_ibfk_2")
 
   @@index([evaluation_id], map: "evaluation_id")
@@ -37,10 +37,20 @@ model parameters_evaluation {
   nombre             String               @db.VarChar(50)
   descripcion        String?              @db.Text
   type_id            Int
+  estado             Boolean?                @default(true)
   details_evaluation details_evaluation[]
   types_evaluation   types_evaluation     @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parameters_evaluation_ibfk_1")
 
   @@index([type_id], map: "type_id")
+}
+
+model Gasto{
+  id Int @id @default(autoincrement())
+  monto Decimal @db.Decimal(10, 2)
+  descripcion String @db.Text
+  fecha DateTime @db.Date
+  player_id Int
+  player players @relation(fields: [player_id], references: [id], onDelete: NoAction)
 }
 
 model players {
@@ -60,6 +70,7 @@ model players {
   activo           Boolean?      @default(true)
   prospecto        Boolean?      @default(false)
   evaluations      evaluations[]
+  gastos           Gasto[]
   users            users?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "players_ibfk_1")
 
   @@index([user_id], map: "user_id")
@@ -85,7 +96,7 @@ model Permission {
   id          Int              @id @default(autoincrement())
   name        String           @unique
   description String?
-  roles       RolePermission[]
+  roles       RolePermission[] 
 }
 
 model RolePermission {
@@ -107,6 +118,7 @@ model users {
   fecha_registro DateTime? @default(now()) @db.Timestamp(0)
   nombre         String    @db.VarChar(45)
   apellido       String    @db.VarChar(45)
+  estado         Boolean?  @default(true)
   players        players[]
   roles          roles     @relation(fields: [rol_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
   tokens         Token[]

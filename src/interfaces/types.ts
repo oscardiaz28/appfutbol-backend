@@ -22,6 +22,7 @@ export interface UserType {
     fecha_registro: any;
     nombre: string;
     apellido: string;
+    estado: boolean,
     rol: RoleType,
     permissions: string[]
 }

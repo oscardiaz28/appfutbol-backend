@@ -45,8 +45,11 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
         if (!user) {
             return res.status(400).json({ success: false, message: "Usuario no registrado" })
         }
+
         const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
         if (!isPasswordCorrect) return res.status(400).json({success: false, message: "La contraseña es incorrecta" })
+
+        if(user.estado !== true) return res.status(403).json({success: false, message: "Cuenta desabilitada, comunicate con el administrador"})
 
         const token = generateToken(user.id)
 
@@ -58,6 +61,7 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
             email: user.email,
             foto: user.foto,
             fecha_registro: user.fecha_registro,
+            estado: user.estado,
             rol: {
                 id: user.roles.id,
                 nombre: user.roles.nombre

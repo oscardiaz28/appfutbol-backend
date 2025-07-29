@@ -37,6 +37,8 @@ export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunct
 
         if(!user) return res.status(400).json({message: "El usuario no ha sido encontrado"})
 
+        if(user.estado !== true) return res.status(403).json({success: false, message: "Cuenta desabilitada, comunicate con el administrador"})
+
         const rol: RoleType = {
             id: user.roles.id,
             nombre: user.roles.nombre
@@ -50,6 +52,7 @@ export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunct
             fecha_registro: user.fecha_registro,
             nombre: user.nombre,
             apellido: user.apellido,
+            estado: user.estado,
             rol,
             permissions
         }

@@ -1,9 +1,10 @@
 import express from 'express';
-import { changePassword, createUser, deleteUser, getAllUsers, getOneUser, getSearchUsers, updateProfileUser, updateUser, userProfile } from '../controllers/user.controller';
+import { changePassword, createUser, deleteUser, getAllUsers, getOneUser, getSearchUsers, showFoto, updateProfileUser, updateUser, uploadFoto, userProfile } from '../controllers/user.controller';
 import { checkAuth } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { AdminUpdateUserSchema, ChangePasswordRequestSchema, ProfileUpdateUserSchema, UserRequestSchema } from '../lib/validations';
 import { requireRole } from '../middlewares/requireRole';
+import { upload } from '../middlewares/multer.middleware';
 
 export const userRoutes = express.Router();
 
@@ -34,13 +35,9 @@ export const userRoutes = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - username
  *               - nombre
  *               - apellido
  *             properties:
- *               username:
- *                 type: string
- *                 example: "oscar28"
  *               nombre:
  *                 type: string
  *                 example: "Oscar"
@@ -97,15 +94,11 @@ userRoutes.put("/profile/update/:id", checkAuth, validate(ProfileUpdateUserSchem
  *           schema:
  *             type: object
  *             required:
- *               - username
  *               - email
  *               - nombre
  *               - apellido
  *               - rol_id
  *             properties:
- *               username:
- *                 type: string
- *                 example: "oscar5863"
  *               email:
  *                 type: string
  *                 format: email
@@ -143,6 +136,36 @@ userRoutes.put("/profile/update/:id", checkAuth, validate(ProfileUpdateUserSchem
 userRoutes.put("/admin/:id", checkAuth, requireRole('ADMIN'), validate(AdminUpdateUserSchema), updateUser )
 
 
+//mostrar la foto de perfil
+/**
+ * @swagger
+ * /api/users/foto/{filename}:
+ *   get:
+ *     tags:
+ *       - Usuarios
+ *     summary: Mostrar foto de perfil
+ *     description: Devuelve la imagen de perfil del usuario como archivo. Es necesario estar autenticado.
+ *     parameters:
+ *       - name: filename
+ *         in: path
+ *         required: true
+ *         description: Nombre del archivo de la imagen (incluyendo extensión)
+ *         schema:
+ *           type: string
+ *           example: 1753916382426.jpg
+ *     responses:
+ *       200:
+ *         description: Imagen de perfil devuelta exitosamente
+ *       400:
+ *         description: Nombre de archivo inválido o faltante
+ *       404:
+ *         description: Imagen no encontrada
+ *       401:
+ *         description: No autorizado (token inválido o no enviado)
+ */
+userRoutes.get("/foto/:filename", checkAuth, showFoto)
+
+
 // obtener perfil del usuario autenticado
 /**
  * @swagger
@@ -165,9 +188,6 @@ userRoutes.put("/admin/:id", checkAuth, requireRole('ADMIN'), validate(AdminUpda
  *                 id:
  *                   type: integer
  *                   example: 1
- *                 username:
- *                   type: string
- *                   example: "admin"
  *                 email:
  *                   type: string
  *                   example: "john@gmail.com"
@@ -255,6 +275,48 @@ userRoutes.get("/profile", checkAuth, userProfile)
  */
 userRoutes.put("/change-password", checkAuth, validate(ChangePasswordRequestSchema), changePassword )
 
+// subir una foto de perfil del usuario
+/**
+ * @swagger
+ * /api/users/foto:
+ *   post:
+ *     tags:
+ *       - Usuarios
+ *     summary: Subir foto de perfil
+ *     description: Sube una nueva foto de perfil para el usuario autenticado. Se debe enviar un formulario con el campo `foto`.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               foto:
+ *                 type: string
+ *                 format: binary
+ *                 description: Archivo de imagen a subir
+ *     responses:
+ *       200:
+ *         description: Foto subida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Foto de perfil actualizada
+ *       400:
+ *         description: Error en la solicitud (por ejemplo, formato de imagen no válido)
+ *       401:
+ *         description: No autorizado (token inválido o no enviado)
+ */
+userRoutes.post("/foto", checkAuth, upload.single('foto'), uploadFoto)
+
+
 // buscar usuarios por nombre, apellido o email
 /**
  * @swagger
@@ -285,9 +347,6 @@ userRoutes.put("/change-password", checkAuth, validate(ChangePasswordRequestSche
  *                   id:
  *                     type: integer
  *                     example: 1
- *                   username:
- *                     type: string
- *                     example: admin
  *                   email:
  *                     type: string
  *                     example: john@gmail.com
@@ -352,9 +411,6 @@ userRoutes.get("/search", checkAuth, getSearchUsers)
  *                 id:
  *                   type: integer
  *                   example: 1
- *                 username:
- *                   type: string
- *                   example: admin
  *                 email:
  *                   type: string
  *                   example: john@gmail.com
@@ -452,9 +508,6 @@ userRoutes.delete("/:id", checkAuth, requireRole('ADMIN'), deleteUser)
  *           schema:
  *             type: object
  *             properties:
- *               username:
- *                 type: string
- *                 example: "john123"
  *               email:
  *                 type: string
  *                 example: "john@gmail.com"
@@ -471,7 +524,6 @@ userRoutes.delete("/:id", checkAuth, requireRole('ADMIN'), deleteUser)
  *                 type: string
  *                 example: "1234"
  *             required:
- *               - username
  *               - email
  *               - nombre
  *               - apellido
@@ -546,9 +598,6 @@ userRoutes.post("/", checkAuth, requireRole('ADMIN'), validate(UserRequestSchema
  *                       id:
  *                         type: integer
  *                         example: 2
- *                       username:
- *                         type: string
- *                         example: oscar28
  *                       email:
  *                         type: string
  *                         example: diazvargasod@gmail.com

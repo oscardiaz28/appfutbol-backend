@@ -3,6 +3,8 @@ import { Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { transporte } from './mailer';
 import { UserType } from '../interfaces/types';
+import path from 'node:path';
+import fs from 'node:fs'
 
 
 export const randomToken = () => {
@@ -92,4 +94,12 @@ export const sendMail = async ( to: string, typeEmail: typeEmail, data: EmailDat
 
 export const rolWithPermissionInclude = {
     permissions: { omit: {roleId: true, permissionId: true}, include: {permission: true} }
+}
+
+export function deleteImageIfExists(filename: string | undefined | null){
+    if(!filename) return
+    const imagePath = path.join(__dirname, '..', '..', 'uploads', filename)
+    if(fs.existsSync(imagePath)){
+        fs.unlinkSync(imagePath)
+    }
 }

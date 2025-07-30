@@ -153,7 +153,7 @@ evaluationRoutes.get("/:id", checkAuth, getOneEvaluation)
  *                   type: string
  *                   example: Parametros actualizados correctamente
  */
-evaluationRoutes.put("/:id", checkAuth, requirePermission('evaluate_player'), editEvaluation)
+evaluationRoutes.put("/:id", checkAuth, requirePermission('mantener_evaluacion'), editEvaluation)
 
 /**
  * @swagger
@@ -185,7 +185,7 @@ evaluationRoutes.put("/:id", checkAuth, requirePermission('evaluate_player'), ed
  *                   type: string
  *                   example: Evaluación eliminada correctamente
  */
-evaluationRoutes.delete("/:id", checkAuth, requirePermission('manage_players'), deleteEvaluation)
+evaluationRoutes.delete("/:id", checkAuth, requirePermission('mantener_evaluacion'), deleteEvaluation)
 
 /**
  * @swagger
@@ -231,6 +231,6 @@ evaluationRoutes.delete("/:id", checkAuth, requirePermission('manage_players'), 
  *                   type: string
  *                   example: Evaluación realizada correctamente
  */
-evaluationRoutes.post("/", checkAuth, requirePermission('evaluate_player'), validate(EvaluationRequestSchema), createEvaluation)
+evaluationRoutes.post("/", checkAuth, requirePermission('mantener_evaluacion'), validate(EvaluationRequestSchema), createEvaluation)
 
 

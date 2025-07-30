@@ -46,7 +46,6 @@ export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunct
 
         const resp: UserType = {
             id: user.id,
-            username: user.username,
             email: user.email,
             foto: user.foto,
             fecha_registro: user.fecha_registro,

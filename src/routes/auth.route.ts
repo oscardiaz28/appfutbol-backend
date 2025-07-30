@@ -44,9 +44,6 @@ export const authRoutes = express.Router()
  *                     id:
  *                       type: integer
  *                       example: 2
- *                     username:
- *                       type: string
- *                       example: oscar28
  *                     email:
  *                       type: string
  *                       example: diazvargasod@gmail.com
@@ -106,9 +103,6 @@ authRoutes.post("/login", validate(loginRequestSchema), login)
  *                 id:
  *                   type: integer
  *                   example: 2
- *                 username:
- *                   type: string
- *                   example: oscar28
  *                 email:
  *                   type: string
  *                   example: diazvargasod@gmail.com

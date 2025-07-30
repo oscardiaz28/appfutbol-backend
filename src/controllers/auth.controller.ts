@@ -55,7 +55,6 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
 
         const response = {
             id: user.id,
-            username: user.username,
             nombre: user.nombre,
             apellido: user.apellido,
             email: user.email,

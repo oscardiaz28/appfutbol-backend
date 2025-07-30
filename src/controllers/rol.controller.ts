@@ -77,6 +77,7 @@ export const getOneRolWithPermissions = async (req: Request, res: Response) => {
             where: {id: rolId},
             include: rolWithPermissionInclude
         })
+
         if(!rol) return res.status(400).json({success: false, message: "El rol no existe"})
 
         const seleccionados = rol?.permissions.map( p => (p.permission.id))

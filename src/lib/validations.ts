@@ -117,9 +117,6 @@ export const EvaluationRequestSchema = z.object({
 })
 
 export const UserRequestSchema = z.object({
-    username: z.string({message: "El username es obligatorio"})
-    .trim()
-    .nonempty("El username no puede estar vacio"),
     email: z.email("Formato no valido para el email")
     .trim(),
     nombre: z.string("El nombre es obligatorio")
@@ -173,9 +170,6 @@ export const UpdateParameterSchema = z.object({
 
 
 export const AdminUpdateUserSchema = z.object({
-    username: z.string("El campo username no tiene un formato válido")
-    .trim()
-    .optional(),
     email: z.email("El email no tiene un formato válido")
     .trim()
     .optional(),
@@ -190,9 +184,6 @@ export const AdminUpdateUserSchema = z.object({
 })
 
 export const ProfileUpdateUserSchema = z.object({
-    username: z.string("El campo username no tiene un formato válido")
-    .trim()
-    .optional(),
     nombre: z.string("El campo nombre no tiene un formato válido")
     .trim()
     .optional(),

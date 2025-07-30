@@ -182,7 +182,7 @@ playerRoutes.get("/:id/evaluations", checkAuth, getPlayerEvaluations)
  *           type: integer
  *           example: 1
  */
-playerRoutes.put("/:id/status", checkAuth, requirePermission('manage_players'), setPlayerStatus)
+playerRoutes.put("/:id/status", checkAuth, requirePermission('mantener_jugadores'), setPlayerStatus)
 /**
  * @swagger
  * /api/players/{id}/prospecto:
@@ -199,7 +199,7 @@ playerRoutes.put("/:id/status", checkAuth, requirePermission('manage_players'), 
  *           type: integer
  *           example: 1
  */
-playerRoutes.put("/:id/prospecto", checkAuth, requirePermission('manage_players'), setPlayerAsProspecto)
+playerRoutes.put("/:id/prospecto", checkAuth, requirePermission('mantener_jugadores'), setPlayerAsProspecto)
 
 /**
  * @swagger
@@ -366,7 +366,7 @@ playerRoutes.get("/top", checkAuth, topPlayers)
  *                   type: string
  *                   example: Jugador creado correctamente
  */
-playerRoutes.post("/", checkAuth, validate(playerRequestSchema), requirePermission('manage_players'), addPlayer)
+playerRoutes.post("/", checkAuth, validate(playerRequestSchema), requirePermission('mantener_jugadores'), addPlayer)
 
 /**
  * @swagger
@@ -537,7 +537,7 @@ playerRoutes.get("/:id", checkAuth, getPlayer)
  *                 type: string
  *                 example: "150.00"
  */
-playerRoutes.put("/:id", checkAuth, validate(updatePlayerSchema), requirePermission('manage_players'), editPlayer)
+playerRoutes.put("/:id", checkAuth, validate(updatePlayerSchema), requirePermission('mantener_jugadores'), editPlayer)
 
 /**
  * @swagger
@@ -569,5 +569,5 @@ playerRoutes.put("/:id", checkAuth, validate(updatePlayerSchema), requirePermiss
  *                   type: string
  *                   example: Jugador eliminado correctamente
  */
-playerRoutes.delete("/:id", checkAuth, requirePermission('manage_players'), deletePlayer)
+playerRoutes.delete("/:id", checkAuth, requirePermission('mantener_jugadores'), deletePlayer)
 

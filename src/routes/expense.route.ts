@@ -3,6 +3,7 @@ import { checkAuth } from '../middlewares/auth.middleware'
 import { createGasto, deleteGasto, editGasto, getAllGastos, getOneGasto } from '../controllers/expense.controller'
 import { validate } from '../middlewares/validate.middleware'
 import { EditGastoRequestSchema, GastoRequestSchema } from '../lib/validations'
+import { requirePermission } from '../middlewares/requirePermission'
 
 export const expenseRoutes = express.Router()
 
@@ -36,7 +37,7 @@ export const expenseRoutes = express.Router()
  *                   type: string
  *                   example: Gasto eliminado correctamente
  */
-expenseRoutes.delete("/:id", checkAuth, deleteGasto)
+expenseRoutes.delete("/:id", checkAuth, requirePermission('gastos'), deleteGasto)
 
 /**
  * @swagger
@@ -78,7 +79,7 @@ expenseRoutes.delete("/:id", checkAuth, deleteGasto)
  *                   type: integer
  *                   example: 2
  */
-expenseRoutes.get("/:id", checkAuth, getOneGasto)
+expenseRoutes.get("/:id", checkAuth, requirePermission('gastos'), getOneGasto)
 
 /**
  * @swagger
@@ -130,7 +131,7 @@ expenseRoutes.get("/:id", checkAuth, getOneGasto)
  *                   type: string
  *                   example: Gasto editado correctamente
  */
-expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), editGasto)
+expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), requirePermission('gastos'), editGasto)
 
 
 /**
@@ -190,7 +191,7 @@ expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), editGasto
  *                   type: integer
  *                   example: 2
  */
-expenseRoutes.post("/", checkAuth, validate(GastoRequestSchema), createGasto)
+expenseRoutes.post("/", checkAuth, validate(GastoRequestSchema), requirePermission('gastos'), createGasto)
 
 
 /**

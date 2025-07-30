@@ -110,12 +110,11 @@ model RolePermission {
 
 model users {
   id             Int       @id @default(autoincrement())
-  username       String    @unique(map: "username") @db.VarChar(100)
   email          String    @unique(map: "email") @db.VarChar(100)
   password       String    @db.VarChar(100)
-  foto           String?   @db.VarChar(100)
+  foto           String?   @db.Text
+  fecha_registro DateTime? @db.Date
   rol_id         Int
-  fecha_registro DateTime? @default(now()) @db.Timestamp(0)
   nombre         String    @db.VarChar(45)
   apellido       String    @db.VarChar(45)
   estado         Boolean?  @default(true)

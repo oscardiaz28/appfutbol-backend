@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import { handleServerError, hashPassword } from "../lib/utils";
+import { deleteImageIfExists, handleServerError, hashPassword } from "../lib/utils";
 import prisma from "../models/prisma";
-import { success } from "zod";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import bcrypt from 'bcryptjs'
+import fs from 'node:fs'
+import path from "node:path";
 
 export const createUser = async ( req: Request, res: Response ) => {
-    const {username, email, nombre, apellido, rol_id, password } = req.body;
+    const {email, nombre, apellido, rol_id, password } = req.body;
     try{
         const existRol = await prisma.roles.findUnique({where: {id: rol_id}})
         if(!existRol) return res.status(400).json({success: false, message: "El rol no existe"});
@@ -14,14 +15,10 @@ export const createUser = async ( req: Request, res: Response ) => {
         const existUser = await prisma.users.findUnique({where: {email: email}})
         if(existUser) return res.status(400).json({success: false, message: "El usuario ya existe"});
 
-        const existUsername = await prisma.users.findUnique({where: {username}})
-        if(existUsername) return res.status(400).json({success: false, message: "El username ya esta en uso"})
-
         const hashedPass = await hashPassword(req.body.password);
 
         const newUser = await prisma.users.create({
             data: {
-                username,
                 email,
                 nombre,
                 apellido,
@@ -123,7 +120,7 @@ export const userProfile = async (req: AuthRequest, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
-    const {username, email, rol_id} = req.body
+    const {email, rol_id} = req.body
     try{
         const user = await prisma.users.findUnique({where: {id}})
         if(!user) return res.status(400).json({success: false, message: "El usuario no existe"})
@@ -137,15 +134,6 @@ export const updateUser = async (req: Request, res: Response) => {
             })
             if(existEmail){
                 return res.status(400).json({success: false, message: "El email ya esta en uso"})
-            }
-        }
-
-        if(username){
-            const existUsername = await prisma.users.findUnique({
-                where: {username, NOT: {id} }
-            })
-            if(existUsername){
-                return res.status(400).json({success: false, message: "El username ya esta en uso"})
             }
         }
 
@@ -166,19 +154,10 @@ export const updateUser = async (req: Request, res: Response) => {
 export const updateProfileUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
-    const {username} = req.body
     try{
         const user = await prisma.users.findUnique({where: {id}})
         if(!user) return res.status(400).json({success: false, message: "El usuario no existe"})
 
-        if(username){
-            const existUsername = await prisma.users.findUnique({
-                where: {username, NOT: {id} }
-            })
-            if(existUsername){
-                return res.status(400).json({success: false, message: "El username ya esta en uso"})
-            }
-        }
         const updated = await prisma.users.update({
             where: {id},
             data: req.body
@@ -235,5 +214,50 @@ export const getSearchUsers = async (req: Request, res: Response) => {
         res.json(users);
     }catch(err){
         return handleServerError(err, "getSearchUsers", res)
+    }
+}
+
+
+export const uploadFoto = async (req: AuthRequest, res: Response) => {
+    const {user} = req
+    const file = req.file
+
+    try{
+        let foto: string | null = null;
+
+        if(file){
+            const { mimetype, filename } = file
+
+            if(!mimetype.startsWith("image/")){
+                deleteImageIfExists(filename)
+                return res.status(400).json({success: false, message: "Formato no permitido"})
+            }
+            foto= filename;
+            deleteImageIfExists(user?.foto)
+
+        }else{
+            deleteImageIfExists(user?.foto)
+            foto = null
+        }
+
+        await prisma.users.update({
+            where: {id: user!.id},
+            data: {foto}
+        })
+        
+        res.json({success: true, message: "Foto actualizada correctamente"})
+
+    }catch(err){
+        return handleServerError(err, "uploadFoto", res)
+    }
+}
+
+export const showFoto = async (req: Request, res: Response) => {
+    const {filename} = req.params
+    const filePath = path.join(__dirname, '..', '..', 'uploads', filename)
+    if(fs.existsSync(filePath)){
+        res.sendFile(filePath)
+    }else{
+        res.status(404).json({success: false, message: "Archivo no encontrado"})
     }
 }

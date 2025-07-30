@@ -66,20 +66,25 @@ PORT=...
 npx prisma migrate deploy
 ```
 
-#### 4. Generar el Prisma Client
+#### 4. Insertar datos iniciales
+``` 
+npm run seed
+```
+
+#### 5. Generar el Prisma Client
 
 ``` 
 npx prisma generate
 ``` 
 
-#### 5. Compilar el proyecto TypeScript a JavaScript
+#### 6. Compilar el proyecto TypeScript a JavaScript
 
 ``` 
 npm run build
 ``` 
 
 
-#### 6. Iniciar la aplicación
+#### 7. Iniciar la aplicación
 
 ``` 
 npm start

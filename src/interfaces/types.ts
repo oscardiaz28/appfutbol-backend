@@ -16,7 +16,6 @@ export type RoleType = {
 
 export interface UserType {
     id: number;
-    username: string;
     email: string;
     foto: string | null;
     fecha_registro: any;

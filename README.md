@@ -26,13 +26,18 @@ Crea un archivo .env con la configuración de producción:
 npx prisma migrate deploy
 ```
 
-#### 4. Generar el Prisma Client
+#### 5. Insertar datos iniciales
+``` 
+npm run seed
+```
+
+#### 6. Generar el Prisma Client
 
 ``` 
 npx prisma generate
 ``` 
 
-#### 5. Levantar el servidor
+#### 7. Levantar el servidor
 
 ``` 
 npm run dev

@@ -26,18 +26,19 @@ Crea un archivo .env con la configuración de producción:
 npx prisma migrate deploy
 ```
 
-#### 5. Insertar datos iniciales
-``` 
-npm run seed
-```
-
-#### 6. Generar el Prisma Client
+#### 4. Generar el Prisma Client
 
 ``` 
 npx prisma generate
 ``` 
 
-#### 7. Levantar el servidor
+#### 5. Insertar datos iniciales
+``` 
+npm run seed
+```
+
+
+#### 6. Levantar el servidor
 
 ``` 
 npm run dev
@@ -71,16 +72,16 @@ PORT=...
 npx prisma migrate deploy
 ```
 
-#### 4. Insertar datos iniciales
-``` 
-npm run seed
-```
-
-#### 5. Generar el Prisma Client
+#### 4. Generar el Prisma Client
 
 ``` 
 npx prisma generate
 ``` 
+
+#### 5. Insertar datos iniciales
+``` 
+npm run seed
+```
 
 #### 6. Compilar el proyecto TypeScript a JavaScript
 

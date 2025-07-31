@@ -1,6 +1,6 @@
 import prisma from "../models/prisma";
 
-const createRol = async () => {
+export const createRol = async () => {
 
     const rolCount = await prisma.roles.count()
 

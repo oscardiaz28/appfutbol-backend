@@ -1,7 +1,7 @@
 import { hashPassword } from "../lib/utils";
 import prisma from "../models/prisma";
 
-const createUser = async () => {
+export const createUser = async () => {
 
     const pass = await hashPassword(<string>process.env.INITIAL_PASS);
     const existing = await prisma.users.findUnique({ where: { email: "john@gmail.com" } })

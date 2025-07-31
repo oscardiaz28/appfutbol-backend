@@ -1,6 +1,6 @@
 import prisma from "../models/prisma";
 
-const createPermissions = async () => {
+export const createPermissions = async () => {
 
     const permissionCount = await prisma.permission.count()
 

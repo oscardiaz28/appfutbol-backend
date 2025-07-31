@@ -62,9 +62,14 @@ npm install
 Crea un archivo .env con la configuración de producción:
 
 ```
-DATABASE_URL=...
-JWT_SECRET=...
-PORT=...
+DATABASE_URL=
+JWT_SECRET=
+GMAIL_USER=
+GMAIL_PASS=
+NODE_ENV=
+FRONTEND_URL_DEV=
+FRONTEND_URL_PROD=
+INITIAL_PASS=
 ```
 
 #### 3. Aplicar las migraciones en la base de datos

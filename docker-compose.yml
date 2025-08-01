@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  api:
+    image: api-image
+    container_name: "backend-api"
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: mysql://root:root@mysql_db:3306/sistema-futbol
+      JWT_SECRET: ${JWT_SECRET}
+      GMAIL_USER: ${GMAIL_USER}
+      GMAIL_PASS: ${GMAIL_PASS}
+      NODE_ENV: ${NODE_ENV}
+      FRONTEND_URL_DEV: ${FRONTEND_URL_DEV}
+      FRONTEND_URL_PROD: ${FRONTEND_URL_PROD}
+      INITIAL_PASS: ${INITIAL_PASS}
+    depends_on:
+      - mysql_db
+    networks:
+      - app-network
+  
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:3306"
+    networks:
+      - app-network
+
+networks:
+  app-network:

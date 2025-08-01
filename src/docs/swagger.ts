@@ -21,7 +21,7 @@ const swaggerDefinition : OAS3Definition = {
 
 const swaggerOptions : OAS3Options = {
     swaggerDefinition,
-    apis: ["./src/routes/*.ts"]
+    apis: ["./src/routes/*.ts", "./src/routes/*.js"]
 }
 
 export default swaggerJSDoc(swaggerOptions)

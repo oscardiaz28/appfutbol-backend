@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { deleteImageIfExists, handleServerError, hashPassword } from "../lib/utils";
+import { deleteImageIfExists, formatDate, handleServerError, hashPassword, toUserDto } from "../lib/utils";
 import prisma from "../models/prisma";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import bcrypt from 'bcryptjs'
@@ -58,12 +58,16 @@ export const getAllUsers = async (req: Request, res: Response) => {
         ])
         const totalPages = Math.ceil(totalItems / size);
 
+        const resp = data.map( user => {
+            return toUserDto(user)
+        } )
+
         res.json({
             totalItems,
             totalPages,
             currentPage: page,
             size,
-            data
+            data: resp
         })
 
     }catch(err){
@@ -81,7 +85,8 @@ export const getOneUser = async (req: Request, res: Response) => {
             include: {roles: true}
         })
         if(!user) return res.status(400).json({success: false, message: "El usuario no existe"})
-        res.json(user)
+        // res.json(user)
+        res.json(toUserDto(user))
 
     }catch(err){
         return handleServerError(err, "getOneUser", res)
@@ -211,7 +216,11 @@ export const getSearchUsers = async (req: Request, res: Response) => {
             omit: {password: true},
             include: {roles: true}
         })
-        res.json(users);
+        const resp = users.map( user => {
+            return toUserDto(user) 
+        })
+        res.json(resp);
+
     }catch(err){
         return handleServerError(err, "getSearchUsers", res)
     }

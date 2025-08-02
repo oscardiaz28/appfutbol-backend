@@ -48,8 +48,10 @@ model Gasto{
   id Int @id @default(autoincrement())
   monto Decimal @db.Decimal(10, 2)
   descripcion String @db.Text
-  fecha DateTime @db.Date
+  fecha DateTime @db.DateTime
   player_id Int
+  user_id Int
+  user users @relation(fields: [user_id], references: [id])
   player players @relation(fields: [player_id], references: [id], onDelete: NoAction)
 }
 
@@ -119,6 +121,7 @@ model users {
   apellido       String    @db.VarChar(45)
   estado         Boolean?  @default(true)
   players        players[]
+  gastos         Gasto[]
   roles          roles     @relation(fields: [rol_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
   tokens         Token[]
 

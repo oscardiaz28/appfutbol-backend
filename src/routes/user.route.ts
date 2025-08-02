@@ -370,7 +370,7 @@ userRoutes.post("/foto", checkAuth, upload.single('foto'), uploadFoto)
  *                   estado:
  *                     type: boolean
  *                     example: true
- *                   roles:
+ *                   rol:
  *                     type: object
  *                     properties:
  *                       id:
@@ -431,7 +431,7 @@ userRoutes.get("/search", checkAuth, getSearchUsers)
  *                 estado:
  *                   type: boolean
  *                   example: true
- *                 roles:
+ *                 rol:
  *                   type: object
  *                   properties:
  *                     id:
@@ -618,7 +618,7 @@ userRoutes.post("/", checkAuth, requireRole('ADMIN'), validate(UserRequestSchema
  *                       estado:
  *                         type: boolean
  *                         example: true
- *                       roles:
+ *                       rol:
  *                         type: object
  *                         properties:
  *                           id:

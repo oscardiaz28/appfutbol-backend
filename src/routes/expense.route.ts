@@ -133,7 +133,6 @@ expenseRoutes.get("/:id", checkAuth, requirePermission('gastos'), getOneGasto)
  */
 expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), requirePermission('gastos'), editGasto)
 
-
 /**
  * @swagger
  * /api/expenses:
@@ -190,9 +189,11 @@ expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), requirePe
  *                 player_id:
  *                   type: integer
  *                   example: 2
+ *                 user_id:
+ *                   type: integer
+ *                   example: 4
  */
 expenseRoutes.post("/", checkAuth, validate(GastoRequestSchema), requirePermission('gastos'), createGasto)
-
 
 /**
  * @swagger

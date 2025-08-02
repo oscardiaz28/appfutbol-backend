@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { handleServerError } from "../lib/utils";
+import { getUserAndPlayerInfo, handleServerError, hasAdminRole } from "../lib/utils";
 import prisma from "../models/prisma";
+import { AuthRequest } from "../middlewares/auth.middleware";
 
-export const createGasto = async (req: Request, res: Response) => {
+export const createGasto = async (req: AuthRequest, res: Response) => {
+    const {user} = req
     const {player_id, monto, descripcion, fecha} = req.body
     try{
         const existPlayer = await prisma.players.findUnique({where: {id: player_id}})
@@ -11,6 +13,7 @@ export const createGasto = async (req: Request, res: Response) => {
         const newGasto = await prisma.gasto.create({
             data: {
                 player_id,
+                user_id: user!.id,
                 monto: monto,
                 descripcion,
                 fecha: new Date(fecha)
@@ -42,13 +45,28 @@ export const editGasto = async (req: Request, res: Response) => {
     }
 }
 
-export const getOneGasto = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id)
+export const getOneGasto = async (req: AuthRequest, res: Response) => {
+    const {user} = req
+    const params: any = req.params
+    const id = parseInt(params.id)
+
     if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
     try{
-        const gasto = await prisma.gasto.findUnique({where: {id}})
+        /*
+        let gasto;
+        if( hasAdminRole(user) ){
+            gasto = await prisma.gasto.findUnique({ where: {id}, include: getUserWhoCreateGasto })
+        }else{
+            gasto = await prisma.gasto.findUnique({ where: {id}, omit: {user_id: true} })
+        }
+        */
+        const gasto = await prisma.gasto.findUnique({
+            where: {id}, 
+            omit: {user_id: true, player_id: true}, 
+            include: getUserAndPlayerInfo
+        })
         if(!gasto) return res.status(400).json({success: false, message: "El gasto no existe"})
-        
+            
         res.json(gasto)
 
     }catch(err){
@@ -86,7 +104,10 @@ export const getAllGastos = async (req: Request, res: Response) => {
             prisma.gasto.findMany({
                 skip,
                 take: size,
-                orderBy: {fecha: 'desc'}
+                orderBy: {fecha: 'desc'},
+                include: getUserAndPlayerInfo,
+                omit: {user_id: true, player_id: true}
+
             }),
             prisma.gasto.count()
         ])

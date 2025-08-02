@@ -219,7 +219,13 @@ export const EditGastoRequestSchema = z.object({
     descripcion: z.string("Valor no valido para la descripcion")
     .trim()
     .nonempty("La descripción es obligatoria")
+    .optional(),
+    fecha: z.string({message: "La fecha es necesaria"})
     .optional()
+    .refine( val => val === undefined || !isNaN(Date.parse(val)), {
+            message: "La fecha no es válida"
+    })
+    .transform( val => val ? new Date(val) : undefined )
 })
 
 export const UpdatePermissionRequestSchema = z.object({

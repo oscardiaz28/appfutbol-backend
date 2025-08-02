@@ -9,8 +9,9 @@ export const createRol = async () => {
             data: [
                 {nombre: "admin"},
                 {nombre: "entrenador"},
-                {nombre: "evaluador"},
-            ]
+                {nombre: "evaluador"}
+            ],
+            skipDuplicates: true
         })
         console.log("Roles creados")
     }else{

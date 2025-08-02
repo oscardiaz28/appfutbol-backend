@@ -368,73 +368,6 @@ playerRoutes.get("/top", checkAuth, topPlayers)
  */
 playerRoutes.post("/", checkAuth, validate(playerRequestSchema), requirePermission('mantener_jugadores'), addPlayer)
 
-/**
- * @swagger
- * /api/players:
- *   get:
- *     tags:
- *       - Jugadores
- *     summary: Obtener todos los jugadores
- *     responses:
- *       200:
- *         description: Lista de jugadores obtenida correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 4
- *                   nombre:
- *                     type: string
- *                     example: "Diego"
- *                   apellido:
- *                     type: string
- *                     example: "Perez"
- *                   fecha_nacimiento:
- *                     type: string
- *                     format: date
- *                     example: "2014-09-10T00:00:00.000Z"
- *                   fecha_registro:
- *                     type: string
- *                     format: date
- *                     example: "2025-07-01T00:00:00.000Z"
- *                   identificacion:
- *                     type: string
- *                     example: "75630194"
- *                   pais:
- *                     type: string
- *                     example: "Peru"
- *                   monto:
- *                     type: string
- *                     example: "0"
- *                   talla:
- *                     type: string
- *                     example: "1.3"
- *                   peso:
- *                     type: string
- *                     example: "32.8"
- *                   pie_habil:
- *                     type: string
- *                     example: "derecho"
- *                   posicion:
- *                     type: string
- *                     example: "delantero"
- *                   user_id:
- *                     type: integer
- *                     example: 1
- *                   activo:
- *                     type: boolean
- *                     example: true
- *                   prospecto:
- *                     type: boolean
- *                     example: false
- */
-playerRoutes.get("/", checkAuth, getPlayers)
-
 //obtener datos de un jugador por id
 /**
  * @swagger
@@ -571,3 +504,69 @@ playerRoutes.put("/:id", checkAuth, validate(updatePlayerSchema), requirePermiss
  */
 playerRoutes.delete("/:id", checkAuth, requirePermission('mantener_jugadores'), deletePlayer)
 
+/**
+ * @swagger
+ * /api/players:
+ *   get:
+ *     tags:
+ *       - Jugadores
+ *     summary: Obtener todos los jugadores
+ *     responses:
+ *       200:
+ *         description: Lista de jugadores obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 4
+ *                   nombre:
+ *                     type: string
+ *                     example: "Diego"
+ *                   apellido:
+ *                     type: string
+ *                     example: "Perez"
+ *                   fecha_nacimiento:
+ *                     type: string
+ *                     format: date
+ *                     example: "2014-09-10T00:00:00.000Z"
+ *                   fecha_registro:
+ *                     type: string
+ *                     format: date
+ *                     example: "2025-07-01T00:00:00.000Z"
+ *                   identificacion:
+ *                     type: string
+ *                     example: "75630194"
+ *                   pais:
+ *                     type: string
+ *                     example: "Peru"
+ *                   monto:
+ *                     type: string
+ *                     example: "0"
+ *                   talla:
+ *                     type: string
+ *                     example: "1.3"
+ *                   peso:
+ *                     type: string
+ *                     example: "32.8"
+ *                   pie_habil:
+ *                     type: string
+ *                     example: "derecho"
+ *                   posicion:
+ *                     type: string
+ *                     example: "delantero"
+ *                   user_id:
+ *                     type: integer
+ *                     example: 1
+ *                   activo:
+ *                     type: boolean
+ *                     example: true
+ *                   prospecto:
+ *                     type: boolean
+ *                     example: false
+ */
+playerRoutes.get("/", checkAuth, getPlayers)

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { LoginRequestType } from "../interfaces/types";
 import prisma from "../models/prisma";
 import bcrypt from 'bcryptjs'
-import { generateToken, getMinutes, handleServerError, hashPassword, randomToken, sendMail } from "../lib/utils";
+import { formatDate, generateToken, getMinutes, handleServerError, hashPassword, randomToken, sendMail } from "../lib/utils";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 /**
@@ -59,7 +59,7 @@ export const login = async (req: Request<{}, {}, LoginRequestType>, res: Respons
             apellido: user.apellido,
             email: user.email,
             foto: user.foto,
-            fecha_registro: user.fecha_registro,
+            fecha_registro: formatDate(user.fecha_registro,),
             estado: user.estado,
             rol: {
                 id: user.roles.id,

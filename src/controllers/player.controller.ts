@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { handleServerError } from "../lib/utils";
+import { getUserAndPlayerInfo, handleServerError, toPlayerDto } from "../lib/utils";
 import { PlayerRequestType, UpdatePlayerType } from "../interfaces/types";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../models/prisma";
@@ -59,12 +59,16 @@ export const getPlayers = async (req: Request, res: Response) => {
         ])
         const totalPages = Math.ceil(totalItems / size);
 
+        const players = data.map( player => {
+            return toPlayerDto(player)
+        })
+
         res.json({
             totalItems,
             totalPages,
             currentPage: page,
             size,
-            data
+            data: players
         })
 
     } catch (err) {
@@ -83,7 +87,8 @@ export const getPlayer = async (req: Request, res: Response) => {
         if(!player){
             return res.status(400).json({message: "Jugador no encontrado"})
         }
-        res.json(player)
+        res.json(toPlayerDto(player))
+
     }catch(err){
         return handleServerError(err, "getPlayer", res)
     }
@@ -107,7 +112,10 @@ export const searchPlayer = async (req: Request, res: Response) => {
                 }
             })
         }
-        res.json(players)
+        const resp = players.map( player => {
+            return toPlayerDto(player)
+        } )
+        res.json(resp)
         
     }catch(err){
         return handleServerError(err, "searchPlayer", res)
@@ -183,7 +191,8 @@ export const setPlayerStatus = async (req: Request, res: Response) => {
             where: {id},
             data: {activo: newStatus}
         })
-        res.json(updated)
+
+        res.json(toPlayerDto(player))
 
     }catch(err){
         return handleServerError(err, "setPlayerStatus", res)
@@ -205,7 +214,8 @@ export const setPlayerAsProspecto = async (req: Request, res: Response) => {
             where: {id},
             data: {prospecto: newProspecto}
         })
-        res.json(updated)
+        
+        res.json(toPlayerDto(updated))
         
     }catch(err){
         return handleServerError(err, "setPlayerStatus", res)
@@ -334,7 +344,9 @@ export const getPlayerGastos = async (req: Request, res: Response) => {
 
         const gastos = await prisma.gasto.findMany({
             where: {player_id: player.id},
-            orderBy: {fecha: 'desc'}
+            orderBy: {fecha: 'desc'},
+            omit: {user_id: true, player_id: true},
+            include: getUserAndPlayerInfo
         })
         
         res.json(gastos)

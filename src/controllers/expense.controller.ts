@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { getUserAndPlayerInfo, handleServerError, hasAdminRole } from "../lib/utils";
 import prisma from "../models/prisma";
 import { AuthRequest } from "../middlewares/auth.middleware";
+import { Prisma } from "@prisma/client";
 
 export const createGasto = async (req: AuthRequest, res: Response) => {
     const {user} = req
@@ -19,6 +20,10 @@ export const createGasto = async (req: AuthRequest, res: Response) => {
                 fecha: new Date(fecha)
             }
         })
+        await prisma.players.update({
+            where: {id: player_id},
+            data: { monto: { increment: monto } } // propiedad para agregar el monto al jugador.
+        })
         res.json(newGasto)
 
     }catch(err){
@@ -34,10 +39,19 @@ export const editGasto = async (req: Request, res: Response) => {
         const gasto = await prisma.gasto.findUnique({where: {id}})
         if(!gasto) return res.status(400).json({success: false, message: "El gasto no existe"})
 
-        const updated = await prisma.gasto.update({
-            where: {id},
-            data: req.body
-        })
+        const diff = new Prisma.Decimal(monto).minus(gasto.monto)
+
+        await prisma.$transaction([
+            prisma.gasto.update({
+                where: {id},
+                data: req.body
+            }),
+            prisma.players.update({
+                where: {id: gasto.player_id},
+                data: { monto: { increment: diff } }
+            })
+        ])
+
         res.json({success: true, message: "Gasto editado correctamente"})
 
     }catch(err){
@@ -80,6 +94,13 @@ export const deleteGasto = async (req: Request, res: Response) => {
     try{
         const gasto = await prisma.gasto.findUnique({where: {id}})
         if(!gasto) return res.status(400).json({success: false, message: "El gasto no existe"})
+
+        const playerId = gasto.player_id;
+
+        await prisma.players.update({
+            where: {id: playerId},
+            data: {monto: {decrement: gasto.monto }}
+        })
 
         await prisma.gasto.delete({where: {id}})
 

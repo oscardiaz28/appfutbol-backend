@@ -126,6 +126,7 @@ export const updateUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
     const {email, rol_id} = req.body
+
     try{
         const user = await prisma.users.findUnique({where: {id}})
         if(!user) return res.status(400).json({success: false, message: "El usuario no existe"})

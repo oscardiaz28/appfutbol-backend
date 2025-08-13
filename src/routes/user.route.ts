@@ -111,7 +111,10 @@ userRoutes.put("/profile/update/:id", checkAuth, validate(ProfileUpdateUserSchem
  *                 example: "Diaz"
  *               rol_id:
  *                 type: integer
- *                 example: 2
+ *                 example: 2.
+ *               estado:
+ *                 type: boolean,
+ *                 example: false
  *     responses:
  *       200:
  *         description: Usuario actualizado correctamente

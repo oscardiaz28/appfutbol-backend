@@ -151,8 +151,8 @@ expenseRoutes.put("/:id", checkAuth, validate(EditGastoRequestSchema), requirePe
  *                 type: integer
  *                 example: 2
  *               monto:
- *                 type: string
- *                 example: "320"
+ *                 type: integer
+ *                 example: 320.50
  *               descripcion:
  *                 type: string
  *                 example: Gasto de mensualidad 3

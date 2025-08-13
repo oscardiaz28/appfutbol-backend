@@ -180,6 +180,8 @@ export const AdminUpdateUserSchema = z.object({
     .trim()
     .optional(),
     rol_id: z.number("Formato no válido para rol")
+    .optional(),
+    estado: z.boolean("Dato no valido para campo estado")
     .optional()
 })
 
@@ -195,10 +197,8 @@ export const ProfileUpdateUserSchema = z.object({
 
 export const GastoRequestSchema = z.object({
     player_id: z.number("Id no valido para player"),
-    monto: z.string("Campo no valido para monto")
-    .trim()
-    .nonempty("El monto no puede estar vacio")
-    .refine( val => val === undefined || !isNaN(parseInt(val)), {
+    monto: z.number("Campo no valido para monto")
+    .refine( val => val === undefined || !isNaN(val), {
         message: "Valor de monto no válido"
     }),
     descripcion: z.string("La descripcion es obligatoria")
@@ -212,9 +212,7 @@ export const GastoRequestSchema = z.object({
 
 
 export const EditGastoRequestSchema = z.object({
-    monto: z.string("Valor no valido para el monto")
-    .trim()
-    .nonempty("El monto no puede estar vacio")
+    monto: z.number("Valor no valido para el monto")
     .optional(),
     descripcion: z.string("Valor no valido para la descripcion")
     .trim()

@@ -23,7 +23,8 @@ export const createUser = async ( req: Request, res: Response ) => {
                 nombre,
                 apellido,
                 rol_id,
-                password: hashedPass
+                password: hashedPass,
+                fecha_registro: new Date() // fecha actual
             }
         })
         // const { password, ...userData } = newUser

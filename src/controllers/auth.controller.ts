@@ -99,11 +99,11 @@ function validateBody(body: any): string | null {
 
 export const olvidePasword = async (req: Request, res: Response) => {
     if (!req.body || Object.keys(req.body).length == 0) {
-        return res.status(400).json({ message: "El cuerpo de la solicitud es obligatorio" })
+        return res.status(400).json({success: false, message: "El cuerpo de la solicitud es obligatorio" })
     }
     const error = validateBody(req.body);
     if (error) {
-        return res.status(400).json({ message: error })
+        return res.status(400).json({success: false, message: error })
     }
     const { email } = req.body
 
@@ -180,11 +180,11 @@ export const postResetPassword = async (req: Request, res: Response) => {
     const {token, password} = req.body || {};
 
     if (!token || typeof token !== 'string') {
-        return res.status(400).json({ message: "Token no enviado" })
+        return res.status(400).json({ success: false, message: "Token no enviado" })
     }
 
     if( !password || password.trim() === "" || typeof password !== "string" ){
-        return res.status(400).json({message: "La nueva contraseña es obligatoria"})
+        return res.status(400).json({success: false, message: "La nueva contraseña es obligatoria"})
     }
 
     try {

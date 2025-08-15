@@ -151,7 +151,7 @@ export const updateUser = async (req: Request, res: Response) => {
             omit: {password: true}
         })
         // res.json(updatedUser)        
-        res.json({success: false, message: "Usuario actualizado correctamente"})        
+        res.json({success: true, message: "Usuario actualizado correctamente"})        
 
     }catch(err){
         return handleServerError(err, "updateUser", res)

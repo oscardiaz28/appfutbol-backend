@@ -13,7 +13,7 @@ export const addPlayer = async (req: AuthRequest<PlayerRequestType>, res: Respon
     try {
         const isPlayerExist = await prisma.players.findFirst({where: {identificacion}})
         if(isPlayerExist){
-            return res.status(400).json({message: "La identificación ya ha sido registrada"})
+            return res.status(400).json({success: false, message: "La identificación ya ha sido registrada"})
         }
         const newPlayer = await prisma.players.create({
             data: {
@@ -137,7 +137,7 @@ export const editPlayer = async (req: Request<{}, {}, UpdatePlayerType>, res: Re
                 where: {identificacion: req.body.identificacion, id: {not: player.id}}
             })
         if( isIdentificacionUsed ){
-            return res.status(400).json({message: "No puede usar esa identificacion, ya esta registrada"})
+            return res.status(400).json({success: false, message: "No puede usar esa identificacion, ya esta registrada"})
         }
 
         const updated = await prisma.players.update({
@@ -157,19 +157,19 @@ export const editPlayer = async (req: Request<{}, {}, UpdatePlayerType>, res: Re
 export const deletePlayer = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)){
-        return res.status(400).json({message: "El ID no es válido"})
+        return res.status(400).json({success: false, message: "El ID no es válido"})
     }
     try{    
         const player = await prisma.players.findUnique({where: {id: id}})
-        if(!player) return res.status(400).json({message: "Jugador no encontrado"})
+        if(!player) return res.status(400).json({success: false, message: "Jugador no encontrado"})
 
         await prisma.players.delete({
             where: {id}
         })
-        res.json({message: "Jugador eliminado correctamente"})
+        res.json({success: true, message: "Jugador eliminado correctamente"})
     }catch(err: any){
         if (err.code == 'P2003') {
-            return res.status(400).json({ message: "No se ha podido eliminar el jugador, tienes registros asociados" })
+            return res.status(400).json({ success: false, message: "No se ha podido eliminar el jugador, tienes registros asociados" })
         }
         return handleServerError(err, "deletePlayer", res)
     }
@@ -179,11 +179,11 @@ export const deletePlayer = async (req: Request, res: Response) => {
 export const setPlayerStatus = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)){
-        return res.status(400).json({message: "El ID no es válido"})
+        return res.status(400).json({success: false, message: "El ID no es válido"})
     }
     try{
         const player = await prisma.players.findUnique({where: {id}})
-        if(!player) return res.status(400).json({message: "Jugador no encontrado"})
+        if(!player) return res.status(400).json({success: false, message: "Jugador no encontrado"})
         
         const newStatus = player.activo ? false : true
 
@@ -206,7 +206,7 @@ export const setPlayerAsProspecto = async (req: Request, res: Response) => {
     }
     try{
         const player = await prisma.players.findUnique({where: {id}})
-        if(!player) return res.status(400).json({message: "Jugador no encontrado"})
+        if(!player) return res.status(400).json({success: false, message: "Jugador no encontrado"})
 
         const newProspecto = player.prospecto ? false : true
 
@@ -225,7 +225,7 @@ export const setPlayerAsProspecto = async (req: Request, res: Response) => {
 export const getPlayerEvaluations = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)){
-        return res.status(400).json({message: "El ID no es válido"})
+        return res.status(400).json({success: false, message: "El ID no es válido"})
     }
     let page = parseInt(req.query.page as string) || 1
     let size = parseInt(req.query.size as string) || 5
@@ -235,7 +235,7 @@ export const getPlayerEvaluations = async (req: Request, res: Response) => {
 
     try{
         const player = await prisma.players.findUnique({where: {id}})
-        if(!player) return res.status(400).json({message: "Jugador no encontrado"})
+        if(!player) return res.status(400).json({success: false, message: "Jugador no encontrado"})
 
         const skip = (page - 1) * size
         

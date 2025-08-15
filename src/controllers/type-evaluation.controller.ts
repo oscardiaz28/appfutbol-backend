@@ -10,7 +10,7 @@ export const createTypeEvaluation = async (req: Request, res: Response) => {
     try {
         const existing = await prisma.types_evaluation.findFirst({ where: { nombre } })
         if (existing) {
-            return res.status(400).json({ message: "El tipo de evaluación ya existe" })
+            return res.status(400).json({ success: false, message: "El tipo de evaluación ya existe" })
         }
         const newType = await prisma.types_evaluation.create({
             data: {
@@ -43,7 +43,7 @@ export const getParameters = async (req: AuthRequest, res: Response) => {
     const params: any = req.params
     const id = parseInt(params.id)
     if (isNaN(id)) {
-        return res.status(400).json({ message: "El ID no es válido" })
+        return res.status(400).json({ success: false, message: "El ID no es válido" })
     }
     const { user } = req
     try {
@@ -69,7 +69,7 @@ export const getParameters = async (req: AuthRequest, res: Response) => {
             })
         }
         if (!type) {
-            return res.status(400).json({ message: "El tipo de evaluación no existe" })
+            return res.status(400).json({ success: false, message: "El tipo de evaluación no existe" })
         }
         res.json(type.parameters_evaluation)
 
@@ -82,7 +82,7 @@ export const getParameters = async (req: AuthRequest, res: Response) => {
 export const getOneType = async (req: Request, res: Response) => {
     const id = Number(req.params.id)
     if (isNaN(id)) {
-        return res.status(400).json({ message: "El ID no es válido" })
+        return res.status(400).json({ success: false,  message: "El ID no es válido" })
     }
     try {
         const type = await prisma.types_evaluation.findUnique({
@@ -94,7 +94,7 @@ export const getOneType = async (req: Request, res: Response) => {
             }
         })
         if (!type) {
-            return res.status(400).json({ message: "Tipo de evaluación no encontrado" })
+            return res.status(400).json({ success: false, message: "Tipo de evaluación no encontrado" })
         }
         res.json(type)
 
@@ -108,7 +108,7 @@ export const createParameter = async (req: Request, res: Response) => {
     try {
         const type = await prisma.types_evaluation.findUnique({ where: { id: parseInt(type_id) } })
         if (!type) {
-            return res.status(400).json({ message: "El tipo de evaluación no se ha encontrado" })
+            return res.status(400).json({ success: false, message: "El tipo de evaluación no se ha encontrado" })
         }
         const existing = await prisma.parameters_evaluation.findFirst({
             where: {
@@ -116,7 +116,7 @@ export const createParameter = async (req: Request, res: Response) => {
             }
         })
         if (existing) {
-            return res.status(400).json({ message: "El parametro ya existe" })
+            return res.status(400).json({ success: false, message: "El parametro ya existe" })
         }
         const newParameter = await prisma.parameters_evaluation.create({
             data: { nombre, descripcion, type_id: type.id }
@@ -132,11 +132,11 @@ export const createParameter = async (req: Request, res: Response) => {
 export const deleteParameter = async (req: Request, res: Response) => {
     const parameterId = parseInt(req.params.id)
     if (isNaN(parameterId)) {
-        return res.status(400).json({ message: "El ID no es válido" })
+        return res.status(400).json({ success: false, message: "El ID no es válido" })
     }
     try {
         const parameter = await prisma.parameters_evaluation.findUnique({ where: { id: parameterId } })
-        if (!parameter) return res.status(400).json({ message: "El parametro de evaluación no existe" })
+        if (!parameter) return res.status(400).json({ success: false, message: "El parametro de evaluación no existe" })
 
         await prisma.parameters_evaluation.delete({ where: { id: parameterId } })
         res.json({success: true, message: "El parametro de evaluación ha sido eliminado correctamente" })

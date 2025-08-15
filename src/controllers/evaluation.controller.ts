@@ -38,12 +38,12 @@ export const editEvaluation = async (req: Request, res: Response) => {
     // TODO - validar el req.body mediante el schema de zod (seguir ejm de schema anteriores)
     const evaluationId = parseInt(req.params.id)
     if(isNaN(evaluationId)){
-        return res.status(400).json({message: "El ID no es válido"})
+        return res.status(400).json({success: false, message: "El ID no es válido"})
     }
     try{
         const evaluation = await prisma.evaluations.findUnique({where: {id: evaluationId} })
         if(!evaluation){
-            return res.status(400).json({message: "La evaluación no existe"})
+            return res.status(400).json({success: false,message: "La evaluación no existe"})
         }
         const {parametros} = req.body
 

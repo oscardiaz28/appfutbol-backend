@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from 'jsonwebtoken'
 import prisma from "../models/prisma";
 import { RoleType, UserType } from "../interfaces/types";
+import { formatDate } from "../lib/utils";
 
 type DecodedType = {
     userId: string
@@ -48,7 +49,7 @@ export const checkAuth = async (req: AuthRequest, res: Response, next: NextFunct
             id: user.id,
             email: user.email,
             foto: user.foto,
-            fecha_registro: user.fecha_registro,
+            fecha_registro: formatDate(user.fecha_registro),
             nombre: user.nombre,
             apellido: user.apellido,
             estado: user.estado,

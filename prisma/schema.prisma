@@ -39,7 +39,7 @@ model parameters_evaluation {
   type_id            Int
   estado             Boolean?                @default(true)
   details_evaluation details_evaluation[]
-  types_evaluation   types_evaluation     @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "parameters_evaluation_ibfk_1")
+  types_evaluation   types_evaluation     @relation(fields: [type_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "parameters_evaluation_ibfk_1")
 
   @@index([type_id], map: "type_id")
 }

@@ -41,7 +41,7 @@ export const playerRequestSchema = z.object({
                     message: "El pie hábil debe ser 'derecho' o 'izquierdo'"
                 }),
     posicion: z.enum(["delantero", "defensa", "portero", "mediocampista"], {
-                    message: "La posición no es válida"
+                    message: "Posicion del jugador no permitida, Use: delantero, defensa, portero o mediocampista "
                 })
 })
 

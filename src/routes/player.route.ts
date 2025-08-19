@@ -317,7 +317,7 @@ playerRoutes.get("/top", checkAuth, topPlayers)
  *               - talla
  *               - peso
  *               - pie_habil
- *               - posicion
+ *               - posicion 
  *             properties:
  *               nombre:
  *                 type: string
@@ -350,7 +350,7 @@ playerRoutes.get("/top", checkAuth, topPlayers)
  *                 example: izquierdo
  *               posicion:
  *                 type: string
- *                 example: defensa
+ *                 example: defensa | delantero | portero | mediocampista
  *     responses:
  *       201:
  *         description: Jugador creado exitosamente

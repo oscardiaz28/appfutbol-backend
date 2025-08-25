@@ -18,4 +18,3 @@ export const createRol = async () => {
         console.log("Roles is already created.")
     }
 }
-createRol()

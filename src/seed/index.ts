@@ -1,3 +1,4 @@
+import prisma from "../models/prisma";
 import { createUser } from "./create-admin";
 import { createPermissions } from "./create-permission";
 import { createRol } from "./create-rol";
@@ -16,6 +17,8 @@ const seed = async () => {
             message = err.message;
         }
         console.log(`❌ Error al hacer seed: ${message}`)
+    }finally {
+        await prisma.$disconnect();
     }
 }
 seed()

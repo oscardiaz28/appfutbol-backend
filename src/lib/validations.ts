@@ -47,8 +47,8 @@ export const playerRequestSchema = z.object({
 
 
 export const updatePlayerSchema = z.object({
-    nombre: z.string().optional(),
-    apellido: z.string().optional(),
+    nombre: z.string("El campo nombre no es válido").optional(),
+    apellido: z.string("El campo apellido no es válido").optional(),
     fecha_nacimiento: z.string()
                     .optional()
                     .refine( val => val === undefined || !isNaN(Date.parse(val)), {
@@ -61,11 +61,6 @@ export const updatePlayerSchema = z.object({
                     }),
     identificacion: z.string().optional(),
     pais: z.string({message: "El pais no es valido"}).optional(),
-    monto: z.string()
-        .optional()
-        .refine( val => val === undefined || !isNaN(Number(val)), {
-            message: "El monto no es válido"
-        }),
     talla: z.string()
         .optional()
         .refine( val => val === undefined || !isNaN(Number(val)), {
@@ -81,7 +76,11 @@ export const updatePlayerSchema = z.object({
                 }).optional(),
     posicion: z.enum(["delantero", "defensa", "portero", "mediocampista"], {
                     message: "La posición no es válida"
-                }).optional()
+                }).optional(),
+    activo: z.boolean("Tipo de dato no válido para el campo activo")
+    .optional(),
+    prospecto: z.boolean("Tipo de dato no válido para el campo prospecto")
+    .optional()
 })
 
 

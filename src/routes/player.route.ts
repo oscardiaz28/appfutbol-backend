@@ -466,9 +466,12 @@ playerRoutes.get("/:id", checkAuth, getPlayer)
  *             properties:
  *               pais:
  *                 example: "Ecuador"
- *               monto:
- *                 type: string
- *                 example: "150.00"
+ *               estado:
+ *                 type: boolean
+ *                 example: true
+ *               prospecto:
+ *                 type: boolean
+ *                 example: false
  */
 playerRoutes.put("/:id", checkAuth, validate(updatePlayerSchema), requirePermission('mantener_jugadores'), editPlayer)
 

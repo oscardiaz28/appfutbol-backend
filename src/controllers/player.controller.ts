@@ -133,13 +133,15 @@ export const editPlayer = async (req: Request<{}, {}, UpdatePlayerType>, res: Re
         const player = await prisma.players.findUnique({where: { id: parseInt(id) }})
         if(!player) return res.status(400).json({message: "Jugador no encontrado"})
 
-        const isIdentificacionUsed = await prisma.players.findFirst({
-                where: {identificacion: req.body.identificacion, id: {not: player.id}}
-            })
-        if( isIdentificacionUsed ){
-            return res.status(400).json({success: false, message: "No puede usar esa identificacion, ya esta registrada"})
-        }
+        if (req.body.identificacion) {
+            const isIdentificacionUsed = await prisma.players.findFirst({
+                where: { identificacion: req.body.identificacion, id: { not: player.id } }
+            });
 
+            if (isIdentificacionUsed) {
+                return res.status(400).json({ message: "No puede usar esa identificacion, ya está registrada" });
+            }
+        }
         const updated = await prisma.players.update({
             where: {id: Number(id)},
             data: req.body

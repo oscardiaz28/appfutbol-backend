@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getUserAndPlayerInfo, handleServerError, toPlayerDto } from "../lib/utils";
+import { formatDate, getUserAndPlayerInfo, handleServerError, toPlayerDto } from "../lib/utils";
 import { PlayerRequestType, UpdatePlayerType } from "../interfaces/types";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../models/prisma";
@@ -83,11 +83,38 @@ export const getPlayer = async (req: Request, res: Response) => {
         return res.status(400).json({message: "El ID es inválido"})
     }
     try{
-        const player = await prisma.players.findUnique({where: {id: Number(id) }})
+        const player = await prisma.players.findUnique({
+            where: {id: Number(id) }, 
+            include: {users: true}
+        })
         if(!player){
             return res.status(400).json({message: "Jugador no encontrado"})
         }
-        res.json(toPlayerDto(player))
+        const creator = {
+            id: player.users?.id,
+            email: player.users?.email,
+            nombre: player.users?.nombre,
+            apellido: player.users?.apellido,
+            foto: player.users?.foto
+        }
+        const response = {
+            id: player.id,
+            nombre: player.nombre,
+            apellido: player.apellido,
+            fecha_nacimiento: formatDate(player.fecha_nacimiento),
+            fecha_registro: formatDate(player.fecha_registro),
+            identificacion: player.identificacion,
+            pais: player.pais,
+            monto: player.monto,
+            talla: player.talla,
+            peso: player.peso,
+            pie_habil: player.pie_habil,
+            posicion: player.posicion,
+            user: creator,
+            activo: player.activo,
+            prospecto: player.prospecto
+        }
+        res.json(response)
 
     }catch(err){
         return handleServerError(err, "getPlayer", res)

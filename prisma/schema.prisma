@@ -48,7 +48,7 @@ model Gasto{
   id Int @id @default(autoincrement())
   monto Decimal @db.Decimal(10, 2)
   descripcion String @db.Text
-  fecha DateTime @db.DateTime
+  fecha DateTime @db.Date
   player_id Int
   user_id Int
   user users @relation(fields: [user_id], references: [id])

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getUserAndPlayerInfo, handleServerError, hasAdminRole } from "../lib/utils";
+import { formatDate, getUserAndPlayerInfo, handleServerError, hasAdminRole } from "../lib/utils";
 import prisma from "../models/prisma";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { Prisma } from "@prisma/client";
@@ -24,7 +24,15 @@ export const createGasto = async (req: AuthRequest, res: Response) => {
             where: {id: player_id},
             data: { monto: { increment: monto } } // propiedad para agregar el monto al jugador.
         })
-        res.json(newGasto)
+        const resp = {
+            id: newGasto.id,
+            monto: newGasto.monto,
+            descripcion: newGasto.descripcion,
+            fecha: formatDate(newGasto.fecha),
+            player_id: newGasto.player_id,
+            user_id: newGasto.user_id
+        }
+        res.json(resp)
 
     }catch(err){
         return handleServerError(err, "createGasto", res)
@@ -81,7 +89,25 @@ export const getOneGasto = async (req: AuthRequest, res: Response) => {
         })
         if(!gasto) return res.status(400).json({success: false, message: "El gasto no existe"})
             
-        res.json(gasto)
+       const resp = {
+        id: gasto.id,
+        monto: gasto.monto,
+        descripcion: gasto.descripcion,
+        fecha: formatDate(gasto.fecha),
+        user: {
+            id: gasto.user.id,
+            email: gasto.user.email,
+            nombre: gasto.user.nombre,
+            apellido: gasto.user.apellido
+        },
+        player: {
+            id: gasto.player.id,
+            nombre: gasto.player.nombre,
+            apellido: gasto.player.apellido,
+            identification: gasto.player.identificacion
+        }
+       }
+        res.json(resp)
 
     }catch(err){
         return handleServerError(err, "getOneGasto", res)
@@ -134,15 +160,40 @@ export const getAllGastos = async (req: Request, res: Response) => {
         ])
         const totalPages = Math.ceil( totalItems / size )
 
+        const expenses = data.map( expense => {
+            return toExpenseResponse(expense)
+        } )
          res.json({
             totalItems,
             totalPages,
             currentPage: page,
             size,
-            data
+            expenses
         })
 
     }catch(err){
         return handleServerError(err, "getAllGastos", res)
     }
+}
+
+const toExpenseResponse = ( expense : any ) => {
+    const resp = {
+        id: expense.id,
+        monto: expense.monto,
+        descripcion: expense.descripcion,
+        fecha: formatDate(expense.fecha),
+        user: {
+            id: expense.user.id,
+            email: expense.user.email,
+            nombre: expense.user.nombre,
+            apellido: expense.user.apellido
+        },
+        player: {
+            id: expense.player.id,
+            nombre: expense.player.nombre,
+            apellido: expense.player.apellido,
+            identification: expense.player.identificacion
+        }
+    }
+    return resp
 }

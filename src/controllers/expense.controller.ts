@@ -7,6 +7,10 @@ import { Prisma } from "@prisma/client";
 export const createGasto = async (req: AuthRequest, res: Response) => {
     const {user} = req
     const {player_id, monto, descripcion, fecha} = req.body
+    const today = new Date().toISOString().split("T")[0]
+    if(fecha > today){
+        return res.status(400).json({message: "La fecha no puede ser mayor que la fecha actual"})
+    }
     try{
         const existPlayer = await prisma.players.findUnique({where: {id: player_id}})
         if(!existPlayer) return res.status(400).json({success: false, message: "El jugador no existe"})

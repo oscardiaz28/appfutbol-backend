@@ -285,7 +285,7 @@ export const getPlayerEvaluations = async (req: Request, res: Response) => {
                 },
                 orderBy: {fecha: 'desc'}
             }),
-            prisma.evaluations.count()
+            prisma.evaluations.count({where: {player_id: id}})
         ])
 
         const totalPages = Math.ceil( totalItems / size )
@@ -367,20 +367,65 @@ export const topPlayers = async (req: Request, res: Response) =>{
 export const getPlayerGastos = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id)
     if(isNaN(id)) return res.status(400).json({success: false, message: "El ID no es válido"})
+    
+    let page = parseInt(req.query.page as string) || 1
+    let size = parseInt(req.query.size as string) || 5 
+
+    if( isNaN(page) || page < 1 ) page = 1
+    if( isNaN(size) || size < 1 ) size = 5
+
+    const skip =  (page - 1 ) * size;
+
     try{
         const player = await prisma.players.findUnique({where: {id}})
         if(!player) return res.status(400).json({success: false, message: "El jugador no existe"})
 
-        const gastos = await prisma.gasto.findMany({
+        const [data, totalItems] = await Promise.all([
+            prisma.gasto.findMany({
             where: {player_id: player.id},
+            skip,
+            take: size,
             orderBy: {fecha: 'desc'},
             omit: {user_id: true, player_id: true},
             include: getUserAndPlayerInfo
+            }),
+            prisma.gasto.count({where: {player_id: player.id } })
+        ])
+        const totalPages = Math.ceil(totalItems / size)
+        const expenses = data.map(expense => toExpenseResponse(expense))
+
+        res.json({
+            totalItems,
+            totalPages,
+            currentPage: page,
+            size,
+            data: expenses
         })
-        
-        res.json(gastos)
 
     }catch(err){
         return handleServerError(err, "getPlayerGastos", res)
     }
+
+}
+
+const toExpenseResponse = ( expense : any ) => {
+    const resp = {
+        id: expense.id,
+        monto: expense.monto,
+        descripcion: expense.descripcion,
+        fecha: formatDate(expense.fecha),
+        user: {
+            id: expense.user.id,
+            email: expense.user.email,
+            nombre: expense.user.nombre,
+            apellido: expense.user.apellido
+        },
+        player: {
+            id: expense.player.id,
+            nombre: expense.player.nombre,
+            apellido: expense.player.apellido,
+            identification: expense.player.identificacion
+        }
+    }
+    return resp
 }

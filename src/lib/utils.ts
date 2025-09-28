@@ -1,15 +1,18 @@
 import bcrypt from 'bcryptjs'
-import { Response } from 'express'
+import { response, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import { transporte } from './mailer';
 import { PlayerDto, UserResponseDto, UserType } from '../interfaces/types';
 import path from 'node:path';
 import fs from 'node:fs'
+import { ChartJSNodeCanvas } from 'chartjs-node-canvas'
+import { Prisma } from '@prisma/client';
 
+const width = 500;
+const height = 300;
+const chartjs = new ChartJSNodeCanvas({ width, height });
 
 export const randomToken = () => {
-    // const myuuid = uuidv4();
-    // return myuuid;
     return Math.floor(10000 + Math.random() * 90000).toString();
 }
 
@@ -97,8 +100,8 @@ export const rolWithPermissionInclude = {
 }
 
 export const getUserAndPlayerInfo = {
-    user: {select: {id: true, email: true, nombre: true, apellido: true} },
-    player: {select: {id: true, nombre: true, apellido: true, identificacion: true}}
+    user: { select: { id: true, email: true, nombre: true, apellido: true } },
+    player: { select: { id: true, nombre: true, apellido: true, identificacion: true } }
 }
 
 
@@ -146,4 +149,206 @@ export const toPlayerDto = (player: any): PlayerDto => {
         activo: player.activo,
         prospecto: player.prospecto
     }
+}
+
+interface Prop {
+    mes: string,
+    total: number
+}
+
+export const capitalize = (val: string | undefined) => {
+    if(!val) return ""
+    return val.charAt(0).toUpperCase() + val.substring(1);
+}
+
+export const generateExpensesChart = async (data: Prop[]) => {
+    const values = data.map( d => ({ ...d, mes: capitalize(d.mes), }) )
+
+    const meses = values.map(d => d.mes);
+    const totales = values.map(d => d.total);
+
+    const configuration: any = {
+        type: "bar",
+        data: {
+            labels: meses,
+            datasets: [
+                {
+                    data: totales,
+                    backgroundColor: [
+                        '#f44a4aff',
+                        '#1cc88a',
+                        '#36b9cc',
+                        '#f6c23e',
+                    ],
+                    borderWith: 1
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    }
+    const image = await chartjs.renderToBuffer(configuration)
+    return image.toString("base64")
+}
+
+export const generateHorizontalBarChart = async (dataset: any) => {
+    if (dataset == null) {
+        return null
+    }
+    const labels = dataset.map((a: any) => a.nombre)
+    const data = dataset.map((a: any) => a.promedio)
+
+    const configuration: any = {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data,
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'],
+                },
+            ],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: false,
+            plugins: {
+                legend: { display: false },
+            },
+            scales: {
+                x: { beginAtZero: true },
+            },
+        },
+    }
+    const image = await chartjs.renderToBuffer(configuration)
+    return image.toString("base64")
+}
+
+export const generateRadarChart = async () => {
+    const configuration: any = {
+        type: "radar",
+        data: {
+            labels: [
+                'Eating',
+                'Drinking',
+                'Sleeping',
+                'Designing',
+                'Coding',
+                'Cycling',
+                'Running'
+            ],
+            datasets: [
+                {
+                    data: [28, 48, 40, 19, 96, 27, 100],
+                    fill: true,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    pointBackgroundColor: 'rgb(54, 162, 235)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(54, 162, 235)'
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: { display: false }
+            },
+            elements: {
+                line: {
+                    borderWidth: 3
+                }
+            }
+        }
+    }
+    const image = await chartjs.renderToBuffer(configuration)
+    return image.toString("base64")
+}
+
+export const generateGraph = async () => {
+    const configuration: any = {
+        type: "bar",
+        data: {
+            labels: ["Agosto", "Septiembre"],
+            datasets: [
+                {
+                    label: "Gastos ($)",
+                    data: [15, 30], // ejemplo: gastos filtrados
+                    backgroundColor: "rgba(54, 162, 235, 0.5)",
+                },
+                {
+                    label: "Evaluaciones promedio",
+                    data: [8, 7], // ejemplo: promedio por mes
+                    backgroundColor: "rgba(255, 99, 132, 0.5)",
+                },
+            ],
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: { position: "top" },
+                title: { display: true, text: "Resumen mensual" },
+            },
+        },
+    };
+    const image = await chartjs.renderToBuffer(configuration)
+    return image.toString("base64")
+}
+
+export const get4MonthDate = () => {
+    const today = new Date()
+    const target = new Date()
+    target.setMonth(today.getMonth() - 3)
+    return target;
+}
+
+interface Props {
+    id: number;
+    monto: Prisma.Decimal;
+    user_id: number;
+    descripcion: string;
+    fecha: Date;
+    player_id: number;
+}
+
+export const getGastosPerMonth = (gastos: Props[]) => {
+    const hoy = new Date()
+
+    const gastosPorMesMap: Record<string, number> = {};
+    for (let i = 0; i < 4; i++) {
+        const fecha = new Date();
+        fecha.setMonth(hoy.getMonth() - i);
+        const key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+        gastosPorMesMap[key] = 0;
+    }
+
+    gastos.forEach(g => {
+        const key = `${g.fecha.getFullYear()}-${String(g.fecha.getMonth() + 1).padStart(2, "0")}`;
+        if (gastosPorMesMap[key] !== undefined) {
+            gastosPorMesMap[key] += Number(g.monto);
+        }
+    });
+
+    const formatter = new Intl.DateTimeFormat("es-ES", { month: "long" });
+
+    const gastosPorMesArray = Object.entries(gastosPorMesMap)
+        .sort(([a], [b]) => a.localeCompare(b)) 
+        .map(([key, total]) => {
+            const [year, month] = key.split("-");
+            const fecha = new Date(Number(year), Number(month) - 1, 1);
+            return {
+                mes: formatter.format(fecha), 
+                total,
+            };
+        });
+
+    return gastosPorMesArray;
 }

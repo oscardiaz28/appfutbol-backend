@@ -1,11 +1,15 @@
 import e, { Request, Response } from "express";
-import { capitalize, formatDate, generateExpensesChart, generateGraph, generateHorizontalBarChart, generateRadarChart, get4MonthDate, getGastosPerMonth, getUserAndPlayerInfo, handleServerError, toPlayerDto } from "../lib/utils";
+import { capitalize, formatDate, formatearFecha, generateExpensesChart, generateGraph, generateHorizontalBarChart, generateRadarChart, get4MonthDate, getGastosPerMonth, getPlayerEvaluationReport, getUserAndPlayerInfo, handleServerError, toPlayerDto } from "../lib/utils";
 import { PlayerRequestType, UpdatePlayerType } from "../interfaces/types";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import prisma from "../models/prisma";
 import { players, Prisma } from "@prisma/client";
 import PdfPrinter from 'pdfmake'
 import type { TDocumentDefinitions } from "pdfmake/interfaces";
+import puppeteer from "puppeteer";
+import fs from "fs";
+import path from "path";
+import ejs from 'ejs'
 
 export const addPlayer = async (req: AuthRequest<PlayerRequestType>, res: Response) => {
     const { user } = req
@@ -129,7 +133,7 @@ export const searchPlayer = async (req: Request, res: Response) => {
 
     try {
         let players: players[];
-        if (query === "") {
+        if (query.trim() === "") {
             players = []
         } else {
             players = await prisma.players.findMany({
@@ -480,11 +484,9 @@ export const exportPlayerData = async (req: Request, res: Response) => {
                 where: {
                     player_id: player.id, type_evaluation_id: evaluacionFisico.id
                 },
-                include: { details_evaluation: { include: {parameters_evaluation: true}} }
+                include: { details_evaluation: { include: { parameters_evaluation: true } } }
             })
-
             const parameters = await prisma.parameters_evaluation.findMany({ where: { type_id: evaluacionFisico.id } })
-
             const averages = parameters.map(param => {
                 const allValues = registeredEvaluations
                     .flatMap(e => e.details_evaluation)
@@ -503,11 +505,13 @@ export const exportPlayerData = async (req: Request, res: Response) => {
         const targetDate = get4MonthDate()
 
         const gastos = await prisma.gasto.findMany({
-            where: { player_id: parseInt(id), fecha: 
-                {gte: new Date(targetDate.getFullYear(), targetDate.getMonth(), 1) ,  }  }, orderBy: {fecha: "desc"}
-         })
+            where: {
+                player_id: parseInt(id), fecha:
+                    { gte: new Date(targetDate.getFullYear(), targetDate.getMonth(), 1), }
+            }, orderBy: { fecha: "desc" }
+        })
 
-        const gastosAll = await prisma.gasto.findMany({where: {player_id: parseInt(id)}, orderBy: {fecha: "desc"} } )
+        const gastosAll = await prisma.gasto.findMany({ where: { player_id: parseInt(id) }, orderBy: { fecha: "desc" } })
         const lastGasto = gastosAll[0]
 
         const totalGastos = gastosAll.reduce((acc, gasto) => acc + Number(gasto.monto), 0);
@@ -515,24 +519,27 @@ export const exportPlayerData = async (req: Request, res: Response) => {
         // group by month
         const dataGastos = getGastosPerMonth(gastos)
 
-        const expensesChart = await generateExpensesChart( dataGastos )
+        const expensesChart = await generateExpensesChart(dataGastos)
         const horizontalChart = await generateHorizontalBarChart(dataset)
 
         const evaluationsData = await prisma.evaluations.findMany({
-            where: {player_id: parseInt(id)}, include: {types_evaluation: true, 
-                details_evaluation: {include: {parameters_evaluation: true}} }, 
-        orderBy: {fecha: "desc"} })
-        
-        
-        const evaluaciones : any = evaluationsData.flatMap( ev => {
-            return ev.details_evaluation.map( det => ({
+            where: { player_id: parseInt(id) }, include: {
+                types_evaluation: true,
+                details_evaluation: { include: { parameters_evaluation: true } }
+            },
+            orderBy: { fecha: "desc" }
+        })
+
+
+        const evaluaciones: any = evaluationsData.flatMap(ev => {
+            return ev.details_evaluation.map(det => ({
                 fecha: formatDate(ev.fecha),
                 tipo: `${capitalize(ev.types_evaluation?.nombre)}`,
                 detalle: capitalize(det.parameters_evaluation.nombre),
                 valor: det.value
             }))
         })
-       
+
         const today = new Date().toISOString().split("T")[0]
 
         const docDefinition: TDocumentDefinitions = {
@@ -678,12 +685,12 @@ export const exportPlayerData = async (req: Request, res: Response) => {
                     table: {
                         widths: ["*", "*", "*", "*"],
                         body: [
-                            [ {text: "Fecha", bold: true } , 
-                                {text: "Tipo", bold: true }, 
-                                {text: "Parametro", bold: true }, 
-                                {text: "Valor", bold: true }
+                            [{ text: "Fecha", bold: true },
+                            { text: "Tipo", bold: true },
+                            { text: "Parametro", bold: true },
+                            { text: "Valor", bold: true }
                             ],
-                            ...evaluaciones.map( ( g : any ) => [g.fecha, g.tipo, g.detalle, g.valor]),
+                            ...evaluaciones.map((g: any) => [g.fecha, g.tipo, g.detalle, g.valor]),
                         ],
                     },
                     layout: {
@@ -714,4 +721,234 @@ export const exportPlayerData = async (req: Request, res: Response) => {
     } catch (err) {
         return handleServerError(err, "exportPlayerData", res)
     }
+}
+
+const formatData = (rows: any) => {
+    const grouped = Object.values(
+        rows.reduce((acc: any, row: any) => {
+            if (!acc[row.type_evaluation_id]) {
+                acc[row.type_evaluation_id] = {
+                    type_evaluation_id: row.type_evaluation_id,
+                    tipo_evaluacion: row.tipo_evaluacion,
+                    parametros: []
+                };
+            }
+
+            acc[row.type_evaluation_id].parametros.push({
+                parameter_id: row.parameter_id,
+                parametro: row.parametro,
+                promedio: Number(row.promedio)
+            });
+
+            return acc;
+        }, {})
+    );
+
+    return grouped;
+}
+
+
+const transformExpenses = (result: any) => {
+    const meses = [
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    const gastosMap = new Map(result.map((r: any) => [Number(r.mes), Number(r.promedio_gasto)]));
+
+    const data = meses.map((nombre, index) => ({
+        mes: nombre,
+        total: gastosMap.get(index + 1) || 0
+    }));
+
+    return data;
+}
+
+export const playerDataExport = async (req: Request, res: Response) => {
+    const { id } = req.params
+    if (isNaN(parseInt(id))) {
+        return res.status(400).json({ message: "El ID no es válido", success: false })
+    }
+    try {
+        const player = await prisma.players.findUnique({
+            where: { id: parseInt(id) }
+        })
+
+        if (!player) {
+            return res.status(400).json({ message: "Jugador no encontrado", success: false })
+        }
+
+        const rows = await prisma.$queryRaw`
+            SELECT 
+            te.id AS type_evaluation_id,
+            te.nombre AS tipo_evaluacion,
+            pe.id AS parameter_id,
+            pe.nombre AS parametro,
+            ROUND(AVG(de.value), 2) AS promedio
+            FROM players p
+            JOIN evaluations e ON e.player_id = p.id
+            JOIN details_evaluation de ON de.evaluation_id = e.id
+            JOIN parameters_evaluation pe ON pe.id = de.parameter_id
+            JOIN types_evaluation te ON te.id = e.type_evaluation_id
+            WHERE p.id = ${player.id}
+            GROUP BY te.id, te.nombre, pe.id, pe.nombre
+            ORDER BY te.id, pe.id;
+        `;
+
+        const evaluations = formatData(rows)
+        console.log(evaluations)
+
+        const year = new Date().getFullYear();
+
+        const result = await prisma.$queryRaw`
+            SELECT 
+            MONTH(fecha) AS mes,
+            ROUND(SUM(monto), 2) AS promedio_gasto
+            FROM Gasto
+            WHERE player_id = ${player.id}
+            AND YEAR(fecha) = ${year}
+            GROUP BY MONTH(fecha)
+            ORDER BY mes;
+        `;
+
+        const expenses = transformExpenses(result)
+
+        // console.log(expenses)
+
+        const info = await getPlayerEvaluationReport(prisma, parseInt(id))
+
+        const datosTemplate = {
+            player: {
+                nombre: info.datosGenerales.nombre,
+                apellido: info.datosGenerales.apellido,
+                fechaEvaluacion: formatearFecha(info.datosGenerales.fechaEvaluacion),
+                estado: info.datosGenerales.estado,
+                edad: info.datosGenerales.edad,
+                peso: info.datosGenerales.peso,
+                imc: info.datosGenerales.imc,
+                nacionalidad: info.datosGenerales.nacionalidad,
+                pieHabil: info.datosGenerales.pieHabil,
+                posicionPrincipal: info.datosGenerales.posicionPrincipal,
+                fechaIngreso: formatearFecha(info.datosGenerales.fechaIngreso),
+                mesesEnSistema: info.datosGenerales.mesesEnSistema,
+                ultimaEvaluacion: formatearFecha(info.datosGenerales.ultimaEvaluacion),
+                estatura: info.datosGenerales.estatura
+            },
+            evaluations,
+            // capacidadesFisicas: info.capacidadesFisicas
+        }
+
+        // const html = generateReportHTML(player);
+        const filePath = path.join(process.cwd(), "views", "report.ejs")
+        const html = await ejs.renderFile(filePath, {
+            player: datosTemplate.player,
+            evaluations: evaluations,
+            gastosMensuales: expenses,
+            year: year
+            // capacidadesFisicas: datosTemplate.capacidadesFisicas
+        })
+
+        // 3️⃣ Crear PDF con Puppeteer
+        const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+
+        await page.setContent(html, { waitUntil: "networkidle0" });
+
+        const pdfBuffer = await page.pdf({
+            format: "A4",
+            printBackground: true,
+        });
+        await browser.close();
+        // 4️⃣ Enviar PDF
+        res.set({
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="reporte_${player.nombre}_${player.apellido}.pdf"`,
+        });
+        res.send(pdfBuffer);
+    } catch (err) {
+        return handleServerError(err, "playerDataExport", res)
+    }
+}
+
+
+function generateReportHTML(player: any) {
+    return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Reporte de Evaluación - ${player.nombre}</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; color: #1c1c1c; }
+  h1, h2 { text-align: center; color: #002B5B; margin: 0; }
+  .header { border: 1px solid #002B5B; padding: 10px; }
+  .section-title { background: #002B5B; color: white; padding: 5px; font-weight: bold; margin-top: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .card { border: 1px solid #ddd; padding: 10px; text-align: center; }
+  .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .table th, .table td { border: 1px solid #ddd; padding: 8px; font-size: 13px; text-align: center; }
+  .progress { background: #e9ecef; height: 8px; border-radius: 5px; overflow: hidden; }
+  .progress-bar { background: #0d6efd; height: 100%; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>${player.nombre.toUpperCase()} ${player.apellido.toUpperCase()}</h1>
+  <p><b>ID:</b> ${player.id} | <b>Nacionalidad:</b> ${player.pais}</p>
+  <p><b>Posición:</b> ${player.posicion || "N/A"} | <b>Pie Dominante:</b> ${player.pie_habil || "N/A"}</p>
+</div>
+
+<h2 class="section-title">I. Datos Biométricos</h2>
+<div class="grid">
+  <div class="card"><b>Edad:</b><br>${calculateAge(player.fecha_nacimiento)} años</div>
+  <div class="card"><b>Estatura:</b><br>${player.talla} m</div>
+  <div class="card"><b>Peso:</b><br>${player.peso} kg</div>
+</div>
+
+<h2 class="section-title">II. Evaluación Técnico-Física</h2>
+<table class="table">
+  <thead>
+    <tr><th>Parámetro</th><th>Valor</th><th>Progreso</th></tr>
+  </thead>
+  <tbody>
+    ${player.evaluations
+            .flatMap((ev: any) => ev.details_evaluation.map((det: any) => `
+        <tr>
+          <td>${det.parameters_evaluation.nombre}</td>
+          <td>${det.value}/10</td>
+          <td>
+            <div class="progress">
+              <div class="progress-bar" style="width:${det.value * 10}%"></div>
+            </div>
+          </td>
+        </tr>
+      `)).join("")}
+  </tbody>
+</table>
+
+<h2 class="section-title">V. Historial de Evaluaciones</h2>
+<table class="table">
+  <thead>
+    <tr><th>Fecha</th><th>Tipo</th><th>Parámetro</th><th>Valor</th></tr>
+  </thead>
+  <tbody>
+    ${player.evaluations.map((ev: any) => `
+      <tr>
+        <td>${new Date(ev.fecha).toLocaleDateString()}</td>
+        <td>${ev.types_evaluation?.nombre || "-"}</td>
+        <td>${ev.details_evaluation[0]?.parameters_evaluation.nombre || "-"}</td>
+        <td>${ev.details_evaluation[0]?.value || "-"}</td>
+      </tr>`).join("")}
+  </tbody>
+</table>
+
+</body>
+</html>`;
+}
+
+// Helper para edad
+function calculateAge(date: Date) {
+    const birth = new Date(date);
+    const diff = Date.now() - birth.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
 }

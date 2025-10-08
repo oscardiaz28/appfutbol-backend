@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "ts-node-dev --transpile-only src/index.ts",
     "build": "npx tsc",
     "start": "node dist/index.js",
     "seed": "npx prisma db seed"
@@ -17,12 +17,14 @@
     "chartjs-node-canvas": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.5",
     "pdfmake": "^0.2.20",
+    "puppeteer": "^24.23.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",

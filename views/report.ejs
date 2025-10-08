@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte del Jugador - Luis Mendoza</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            background: white;
+            color: #2c3e50;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        @page {
+            size: A4;
+            margin: 12mm 15mm;
+        }
+
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .letterhead {
+            text-align: center;
+            border-bottom: 3px solid #1a365d;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .organization-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 3px;
+        }
+
+        .report-title {
+            font-size: 14px;
+            color: #34495e;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .report-subtitle {
+            font-size: 10px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .player-header {
+            background: #f8f9fa;
+            border: 2px solid #1a365d;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 5px;
+        }
+
+        .player-info-line {
+            font-size: 11px;
+            color: #2c3e50;
+            margin: 2px 0;
+        }
+
+        .section {
+            margin-bottom: 12px;
+            border: 1px solid #bdc3c7;
+            background: white;
+        }
+
+        .section-header {
+            background: #1a365d;
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-content {
+            padding: 10px 12px;
+        }
+
+        .two-column-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .three-column-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        .info-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .info-table .label {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 40%;
+        }
+
+        .info-table .value {
+            color: #34495e;
+        }
+
+        .metric-box {
+            text-align: center;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            border-radius: 3px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a365d;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 140px;
+            margin: 5px 0;
+        }
+
+        .chart-large {
+            height: 180px;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .performance-item {
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+            font-size: 10px;
+        }
+
+        .performance-label {
+            width: 70px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .performance-bar {
+            flex: 1;
+            height: 8px;
+            background: #ecf0f1;
+            margin: 0 6px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1a365d, #2c5aa0);
+            border-radius: 4px;
+        }
+
+        .performance-value {
+            font-weight: bold;
+            color: #1a365d;
+            width: 30px;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 5px;
+        }
+
+        .data-table th {
+            background: #34495e;
+            color: white;
+            padding: 6px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 9px;
+            border-right: 1px solid #2c3e50;
+        }
+
+        .data-table td {
+            padding: 5px 6px;
+            border-bottom: 1px solid #ecf0f1;
+            border-right: 1px solid #ecf0f1;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 2px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a365d;
+            border-radius: 3px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-prospect {
+            background: #cce7ff;
+            color: #004085;
+        }
+
+        .badge-high {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .analysis-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .analysis-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0;
+        }
+
+        .analysis-item {
+            margin: 3px 0;
+            padding: 4px 8px;
+            font-size: 9px;
+            border-left: 3px solid;
+            background: #f8f9fa;
+        }
+
+        .strength {
+            border-left-color: #28a745;
+        }
+
+        .improvement {
+            border-left-color: #ffc107;
+        }
+
+        .concern {
+            border-left-color: #dc3545;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .comparison-item {
+            text-align: center;
+            padding: 6px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+
+        .comparison-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1a365d;
+        }
+
+        .comparison-label {
+            font-size: 8px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .footer-info {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #bdc3c7;
+            font-size: 9px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .page-break {
+            page-break-before: always;
+            margin-top: 20px;
+        }
+
+        .recommendation-box {
+            background: #e8f4f8;
+            border: 1px solid #b3d9e6;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 3px;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            color: #1a365d;
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-text {
+            font-size: 9px;
+            line-height: 1.3;
+            color: #2c3e50;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            .section {
+                break-inside: avoid;
+            }
+
+            .chart-container {
+                break-inside: avoid;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Página 1 -->
+        <!-- Encabezado institucional -->
+        <div class="letterhead">
+            <div class="organization-name">CENTRO DE DESARROLLO FUTBOLÍSTICO</div>
+            <div class="report-title">Reporte Técnico de Evaluación del Jugador</div>
+        </div>
+
+        <!-- Información del Jugador -->
+        <div class="player-header">
+            <div class="player-name">
+                <%= player.nombre %>
+                    <%= player.apellido %>
+            </div>
+            <div class="player-info-line"><strong>Fecha de Evaluación:</strong>
+                <%= player.fechaEvaluacion %> | <strong>Evaluador:</strong> Staff Técnico
+            </div>
+            <div class="player-info-line"><strong>Estado:</strong> <span class="status-badge badge-prospect">
+                    <%= player.estado ? "PROSPECTO ACTIVO" : "NO ES PROSPECTO" %>
+                </span></div>
+        </div>
+
+        <!-- Métricas Principales -->
+        <div class="section">
+            <div class="section-header">I. DATOS BIOMÉTRICOS Y GENERALES</div>
+            <div class="section-content">
+                <div class="three-column-grid">
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.edad %>
+                        </span>
+                        <span class="metric-label">Años</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.estatura %>m
+                        </span>
+                        <span class="metric-label">Estatura</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.peso %>kg
+                        </span>
+                        <span class="metric-label">Peso</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.imc %>
+                        </span>
+                        <span class="metric-label">IMC</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.nacionalidad %>
+                        </span>
+                        <span class="metric-label">Nacionalidad</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">
+                            <%= player.pieHabil %>
+                        </span>
+                        <span class="metric-label">Pie Dominante</span>
+                    </div>
+                </div>
+
+                <div class="two-column-grid" style="margin-top: 10px;">
+                    <div>
+                        <table class="info-table">
+                            <tr>
+                                <td class="label">Posición Principal:</td>
+                                <td class="value">
+                                    <%= player.posicionPrincipal %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="label">Fecha de Ingreso:</td>
+                                <td class="value">
+                                    <%= player.fechaIngreso %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="label">Meses en Sistema:</td>
+                                <td class="value">
+                                    <%= player.mesesEnSistema %> meses
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <table class="info-table">
+                            <tr>
+                                <td class="label">Última Evaluación:</td>
+                                <td class="value">
+                                    <%= player.ultimaEvaluacion %>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluación Técnica -->
+        <div class="section">
+            <div class="section-header">II. EVALUACIÓNES</div>
+            <div class="section-content">
+                <div class="two-column-grid">
+                    <% evaluations.forEach( ev=> { %>
+                        <div>
+                            <h4 style="font-size: 11px; margin-bottom: 8px; 
+                            color: #1a365d; text-transform: capitalize; ">
+                                <%= ev.tipo_evaluacion %>
+                            </h4>
+                            <div class="performance-grid">
+                                <% ev.parametros.forEach( param=> { %>
+                                    <div class="performance-item">
+                                        <span class="performance-label" style="text-transform: capitalize;">
+                                            <%= param.parametro %> :
+                                        </span>
+                                        <div class="performance-bar">
+                                            <div class="performance-fill" style=`width: <%=Math.min((param.promedio /
+                                                10) * 100, 100) %>%`
+                                                ></div>
+                                        </div>
+                                        <span class="performance-value">
+                                            <%= param.promedio%>/10
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <% }) %>
+                                    </div>
+                            </div>
+                            <% }) %>
+                        </div>
+                </div>
+            </div>
+
+            <!-- Gráficos de gastos -->
+            <div class="section">
+                <div class="section-header">III. ANÁLISIS GRÁFICO DE GASTOS</div>
+                <div class="section-content">
+                    <canvas id="gastosChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+
+            <!-- Comparación con Promedio 
+            <div class="section">
+                <div class="section-header">IV. COMPARACIÓN CON PROMEDIOS DE CATEGORÍA</div>
+                <div class="section-content">
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <div class="comparison-value">+12%</div>
+                            <div class="comparison-label">Velocidad vs Promedio</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-value">+8%</div>
+                            <div class="comparison-label">Agilidad vs Promedio</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-value">-5%</div>
+                            <div class="comparison-label">Fuerza vs Promedio</div>
+                        </div>
+                        <div class="comparison-item">
+                            <div class="comparison-value">+15%</div>
+                            <div class="comparison-label">Táctica vs Promedio</div>
+                        </div>
+                    </div>
+
+                    <table class="data-table" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Parámetro</th>
+                                <th>Luis Mendoza</th>
+                                <th>Promedio Sub-15</th>
+                                <th>Percentil</th>
+                                <th>Clasificación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Velocidad (m/s)</td>
+                                <td><strong>6.8</strong></td>
+                                <td>6.1</td>
+                                <td>75°</td>
+                                <td><span class="status-badge badge-high">Superior</span></td>
+                            </tr>
+                            <tr>
+                                <td>Resistencia (min)</td>
+                                <td><strong>12.5</strong></td>
+                                <td>11.8</td>
+                                <td>68°</td>
+                                <td><span class="status-badge badge-active">Bueno</span></td>
+                            </tr>
+                            <tr>
+                                <td>Precisión Pase (%)</td>
+                                <td><strong>78</strong></td>
+                                <td>75</td>
+                                <td>62°</td>
+                                <td><span class="status-badge badge-active">Promedio</span></td>
+                            </tr>
+                            <tr>
+                                <td>Fuerza (kg)</td>
+                                <td><strong>42</strong></td>
+                                <td>48</td>
+                                <td>35°</td>
+                                <td><span class="status-badge badge-prospect">Mejorable</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+             Nueva Página  -->
+            <!-- <div class="page-break">
+                <!-- Evaluaciones Detalladas -->
+                <!-- <div class="section">
+                    <div class="section-header">V. HISTORIAL DE EVALUACIONES</div>
+                    <div class="section-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Evaluador</th>
+                                    <th>Tipo</th>
+                                    <th>Parámetro</th>
+                                    <th>Valor Anterior</th>
+                                    <th>Valor Actual</th>
+                                    <th>Evolución</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>17/08/25</td>
+                                    <td>C. Rodríguez</td>
+                                    <td>Físico</td>
+                                    <td>Velocidad</td>
+                                    <td>7.5</td>
+                                    <td><strong>8.0</strong></td>
+                                    <td style="color: #28a745;">↗ +0.5</td>
+                                    <td>Mejora notable en arranque</td>
+                                </tr>
+                                <tr>
+                                    <td>17/08/25</td>
+                                    <td>C. Rodríguez</td>
+                                    <td>Técnico</td>
+                                    <td>Pase Largo</td>
+                                    <td>6.5</td>
+                                    <td><strong>7.0</strong></td>
+                                    <td style="color: #28a745;">↗ +0.5</td>
+                                    <td>Mayor precisión</td>
+                                </tr>
+                                <tr>
+                                    <td>03/08/25</td>
+                                    <td>M. Silva</td>
+                                    <td>Táctico</td>
+                                    <td>Posicionamiento</td>
+                                    <td>8.5</td>
+                                    <td><strong>9.0</strong></td>
+                                    <td style="color: #28a745;">↗ +0.5</td>
+                                    <td>Excelente lectura del juego</td>
+                                </tr>
+                                <tr>
+                                    <td>20/07/25</td>
+                                    <td>A. Torres</td>
+                                    <td>Físico</td>
+                                    <td>Resistencia</td>
+                                    <td>7.2</td>
+                                    <td><strong>7.0</strong></td>
+                                    <td style="color: #dc3545;">↘ -0.2</td>
+                                    <td>Requiere trabajo cardiovascular</td>
+                                </tr>
+                                <tr>
+                                    <td>15/07/25</td>
+                                    <td>C. Rodríguez</td>
+                                    <td>Técnico</td>
+                                    <td>Control Balón</td>
+                                    <td>7.0</td>
+                                    <td><strong>7.5</strong></td>
+                                    <td style="color: #28a745;">↗ +0.5</td>
+                                    <td>Mayor confianza con el balón</td>
+                                </tr>
+                                <tr>
+                                    <td>01/07/25</td>
+                                    <td>M. Silva</td>
+                                    <td>Mental</td>
+                                    <td>Concentración</td>
+                                    <td>7.8</td>
+                                    <td><strong>8.2</strong></td>
+                                    <td style="color: #28a745;">↗ +0.4</td>
+                                    <td>Mejor enfoque durante entrenamientos</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div> -->
+
+                <!-- Análisis Financiero -->
+                <!-- <div class="section">
+                    <div class="section-header">VI. ANÁLISIS DE INVERSIÓN Y GASTOS</div>
+                    <div class="section-content">
+                        <div class="two-column-grid">
+                            <div>
+                                <h4 style="font-size: 11px; margin-bottom: 8px; color: #1a365d;">Resumen Financiero</h4>
+                                <table class="info-table">
+                                    <tr>
+                                        <td class="label">Inversión Total:</td>
+                                        <td class="value"><strong>S/ 50.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Costo por Sesión:</td>
+                                        <td class="value">S/ 12.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Sesiones Completadas:</td>
+                                        <td class="value">48 de 48</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Asistencia:</td>
+                                        <td class="value">100%</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Último Gasto:</td>
+                                        <td class="value">S/ 30.00 - Indumentaria</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Próximo Pago:</td>
+                                        <td class="value">01/10/25</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 11px; margin-bottom: 8px; color: #1a365d;">Evolución de Gastos
+                                </h4>
+                                <div class="chart-container">
+                                    <canvas id="expensesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <h4 style="font-size: 11px; margin-bottom: 8px; color: #1a365d;">Detalle de Gastos por
+                                Categoría
+                            </h4>
+                            <div class="chart-container chart-large">
+                                <canvas id="expensesCategoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Análisis Integral -->
+                <!-- <div class="section">
+                    <div class="section-header">VII. ANÁLISIS TÉCNICO INTEGRAL</div>
+                    <div class="section-content">
+                        <div class="analysis-section">
+                            <div>
+                                <h4 style="font-size: 11px; margin-bottom: 8px; color: #1a365d;">FORTALEZAS
+                                    IDENTIFICADAS
+                                </h4>
+                                <ul class="analysis-list">
+                                    <li class="analysis-item strength">Excelente visión táctica y posicionamiento
+                                        defensivo
+                                    </li>
+                                    <li class="analysis-item strength">Velocidad superior al promedio de la categoría
+                                        (+12%)
+                                    </li>
+                                    <li class="analysis-item strength">Coordinación y agilidad destacadas (8.5/10)</li>
+                                    <li class="analysis-item strength">Actitud profesional y dedicación al entrenamiento
+                                    </li>
+                                    <li class="analysis-item strength">Capacidad de liderazgo emergente en el campo</li>
+                                    <li class="analysis-item strength">Adaptabilidad a diferentes sistemas tácticos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            <!-- </div> --> 
+            
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            // Los datos vienen del backend
+            const gastosData =  <%- JSON.stringify(gastosMensuales) %>;
+
+            const labels = gastosData.map(item => item.mes);
+            const valores = gastosData.map(item => item.total);
+
+            const ctx = document.getElementById('gastosChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Gastos por mes (S/) - <%= year %>`,
+                        data: valores,
+                        borderWidth: 1,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
+
+</body>
+
+</html>

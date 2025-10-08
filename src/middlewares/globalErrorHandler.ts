@@ -7,7 +7,7 @@ export const globalErrorHandler = ( err: any, req: Request, res: Response, next:
         if( err.message == "Unexpected field" ){
             message = ", campo no valido para subir la foto"
         }
-        return res.status(400).json({success: false, message: `Erro al subir el archivo ${message}` })
+        return res.status(400).json({success: false, message: `Error al subir el archivo ${message}` })
     }
     console.log(err)
     res.status(500).json({success: false, message: `Error interno del servidor ${err.message}`})

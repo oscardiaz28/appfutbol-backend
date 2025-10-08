@@ -157,12 +157,12 @@ interface Prop {
 }
 
 export const capitalize = (val: string | undefined) => {
-    if(!val) return ""
+    if (!val) return ""
     return val.charAt(0).toUpperCase() + val.substring(1);
 }
 
 export const generateExpensesChart = async (data: Prop[]) => {
-    const values = data.map( d => ({ ...d, mes: capitalize(d.mes), }) )
+    const values = data.map(d => ({ ...d, mes: capitalize(d.mes), }))
 
     const meses = values.map(d => d.mes);
     const totales = values.map(d => d.total);
@@ -340,15 +340,281 @@ export const getGastosPerMonth = (gastos: Props[]) => {
     const formatter = new Intl.DateTimeFormat("es-ES", { month: "long" });
 
     const gastosPorMesArray = Object.entries(gastosPorMesMap)
-        .sort(([a], [b]) => a.localeCompare(b)) 
+        .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, total]) => {
             const [year, month] = key.split("-");
             const fecha = new Date(Number(year), Number(month) - 1, 1);
             return {
-                mes: formatter.format(fecha), 
+                mes: formatter.format(fecha),
                 total,
             };
         });
 
     return gastosPorMesArray;
 }
+
+export function formatearFecha(fecha: Date): string {
+  const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  const dia = fecha.getDate();
+  const mes = meses[fecha.getMonth()];
+  const año = fecha.getFullYear();
+  
+  return `${dia} de ${mes}, ${año}`;
+}
+
+
+// Types para el reporte de evaluación
+interface PlayerEvaluationReport {
+    // Datos Biométricos y Generales
+    datosGenerales: {
+        nombre: string;
+        apellido: string;
+        edad: number;
+        estatura: number;
+        peso: number;
+        imc: number;
+        nacionalidad: string;
+        pieHabil: string;
+        posicionPrincipal: string;
+        fechaIngreso: Date;
+        mesesEnSistema: number;
+        entrenador: string;
+        horario: string;
+        ultimaEvaluacion: Date;
+        fechaEvaluacion: Date;
+        evaluador: string;
+        estado: string;
+    };
+
+    // Evaluación Técnico-Física
+    capacidadesFisicas: {
+        velocidad: number;
+        resistencia: number;
+        agilidad: number;
+        fuerza: number;
+        coordinacion: number;
+        flexibilidad: number;
+    };
+
+    habilidadesTecnicas: {
+        pase: number;
+        control: number;
+        despeje: number;
+        remate: number;
+        regate: number;
+        centros: number;
+    };
+
+  
+}
+
+// Query usando Prisma para obtener toda la información
+async function getPlayerEvaluationReport(
+    prisma: any,
+    playerId: number
+): Promise<PlayerEvaluationReport> {
+
+    // 1. Obtener datos del jugador
+    const player = await prisma.players.findUnique({
+        where: { id: playerId },
+        include: {
+            users: {
+                select: {
+                    nombre: true,
+                    apellido: true
+                }
+            }
+        }
+    });
+
+    if (!player) {
+        throw new Error('Jugador no encontrado');
+    }
+
+    // 2. Calcular edad
+    const edad = calcularEdad(player.fecha_nacimiento);
+
+    // 3. Calcular IMC
+    const imc = player.peso && player.talla
+        ? Number(player.peso) / Math.pow(Number(player.talla), 2)
+        : 0;
+
+    // 4. Calcular meses en el sistema
+    const mesesEnSistema = player.fecha_registro
+        ? calcularMeses(player.fecha_registro, new Date())
+        : 0;
+
+    // 5. Obtener última evaluación completa con detalles
+    const ultimaEvaluacion = await prisma.evaluations.findFirst({
+        where: { player_id: playerId },
+        orderBy: { fecha: 'desc' },
+        include: {
+            details_evaluation: {
+                include: {
+                    parameters_evaluation: {
+                        include: {
+                            types_evaluation: true
+                        }
+                    }
+                }
+            },
+            types_evaluation: true
+        }
+    });
+
+    // 6. Obtener historial de evaluaciones
+    const historialEvaluaciones = await prisma.evaluations.findMany({
+        where: { player_id: playerId },
+        orderBy: { fecha: 'desc' },
+        take: 10,
+        include: {
+            details_evaluation: {
+                include: {
+                    parameters_evaluation: true
+                }
+            },
+            types_evaluation: true
+        }
+    });
+
+    // 7. Obtener información financiera
+    const gastos = await prisma.gasto.findMany({
+        where: { player_id: playerId },
+        orderBy: { fecha: 'desc' }
+    });
+
+    const inversionTotal = gastos.reduce(
+        ( sum : any , gasto : any ) => sum + Number(gasto.monto),
+        0
+    );
+
+    const ultimoGasto = gastos[0];
+
+    // 8. Calcular sesiones (asumiendo que cada gasto representa una sesión)
+    const sesionesCompletadas = gastos.length;
+    const costoPorSesion = sesionesCompletadas > 0
+        ? inversionTotal / sesionesCompletadas
+        : 0;
+
+    // 9. Organizar capacidades físicas y habilidades técnicas
+    const capacidadesFisicas: any = {
+        velocidad: 0,
+        resistencia: 0,
+        agilidad: 0,
+        fuerza: 0,
+        coordinacion: 0,
+        flexibilidad: 0
+    };
+
+    const habilidadesTecnicas: any = {
+        pase: 0,
+        control: 0,
+        despeje: 0,
+        remate: 0,
+        regate: 0,
+        centros: 0
+    };
+
+    if (ultimaEvaluacion) {
+        ultimaEvaluacion.details_evaluation.forEach( ( detail : any) => {
+            const paramName = detail.parameters_evaluation.nombre.toLowerCase();
+            const value = detail.value / 10; // Convertir de escala 0-100 a 0-10
+
+            // Capacidades Físicas
+            if (paramName.includes('velocidad')) capacidadesFisicas.velocidad = value;
+            if (paramName.includes('resistencia')) capacidadesFisicas.resistencia = value;
+            if (paramName.includes('agilidad')) capacidadesFisicas.agilidad = value;
+            if (paramName.includes('fuerza')) capacidadesFisicas.fuerza = value;
+            if (paramName.includes('coordinacion')) capacidadesFisicas.coordinacion = value;
+            if (paramName.includes('flexibilidad')) capacidadesFisicas.flexibilidad = value;
+
+            // Habilidades Técnicas
+            if (paramName.includes('pase')) habilidadesTecnicas.pase = value;
+            if (paramName.includes('control')) habilidadesTecnicas.control = value;
+            if (paramName.includes('despeje')) habilidadesTecnicas.despeje = value;
+            if (paramName.includes('remate')) habilidadesTecnicas.remate = value;
+            if (paramName.includes('regate')) habilidadesTecnicas.regate = value;
+            if (paramName.includes('centro')) habilidadesTecnicas.centros = value;
+        });
+    }
+
+    // 10. Construir historial con evolución
+    // const historial = construirHistorial(historialEvaluaciones);
+
+    // 11. Construir el reporte completo
+    const reporte: PlayerEvaluationReport = {
+        datosGenerales: {
+            nombre: player.nombre,
+            apellido: player.apellido,
+            edad: edad,
+            estatura: Number(player.talla) || 0,
+            peso: Number(player.peso) || 0,
+            imc: Number(imc.toFixed(1)),
+            nacionalidad: player.pais,
+            pieHabil: player.pie_habil || '',
+            posicionPrincipal: player.posicion || '',
+            fechaIngreso: player.fecha_registro || new Date(),
+            mesesEnSistema: mesesEnSistema,
+            entrenador: player.users ? `${player.users.nombre} ${player.users.apellido}` : '',
+            horario: '', // Necesitarías agregar este campo
+            ultimaEvaluacion: ultimaEvaluacion?.fecha || new Date(),
+            fechaEvaluacion: new Date(),
+            evaluador: 'Staff Técnico',
+            estado: player.prospecto ? 'PROSPECTO ACTIVO' : (player.activo ? 'ACTIVO' : 'INACTIVO')
+        },
+        capacidadesFisicas,
+        habilidadesTecnicas,
+       
+    };
+
+    return reporte;
+}
+
+// Funciones auxiliares
+function calcularEdad(fechaNacimiento: Date): number {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+
+    return edad;
+}
+
+function calcularMeses(fechaInicio: Date, fechaFin: Date): number {
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    const meses = (fin.getFullYear() - inicio.getFullYear()) * 12
+        + (fin.getMonth() - inicio.getMonth());
+
+    return meses;
+}
+
+function generarObservacion(evolucion: number, parametro: string): string {
+    if (evolucion > 0.3) return `Mejora notable en ${parametro.toLowerCase()}`;
+    if (evolucion > 0) return `Mayor precisión`;
+    if (evolucion < -0.1) return `Requiere trabajo cardiovascular`;
+    return `Estable`;
+}
+
+function calcularProximoPago(): Date {
+    const hoy = new Date();
+    const proximoPago = new Date(hoy);
+    proximoPago.setMonth(proximoPago.getMonth() + 1);
+    proximoPago.setDate(1);
+    return proximoPago;
+}
+
+// Exportar
+export {
+    getPlayerEvaluationReport,
+    PlayerEvaluationReport
+};

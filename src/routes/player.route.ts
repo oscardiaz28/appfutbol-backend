@@ -1,5 +1,5 @@
 import express from 'express'
-import { addPlayer, deletePlayer, editPlayer, exportPlayerData, getPlayer, getPlayerEvaluations, getPlayerGastos, getPlayers, searchPlayer, setPlayerAsProspecto, setPlayerStatus, topPlayers } from '../controllers/player.controller'
+import { addPlayer, deletePlayer, editPlayer, exportPlayerData, getPlayer, getPlayerEvaluations, getPlayerGastos, getPlayers, playerDataExport, searchPlayer, setPlayerAsProspecto, setPlayerStatus, topPlayers } from '../controllers/player.controller'
 import { validate } from '../middlewares/validate.middleware'
 import { playerRequestSchema, updatePlayerSchema } from '../lib/validations'
 import { checkAuth } from '../middlewares/auth.middleware'
@@ -575,4 +575,5 @@ playerRoutes.delete("/:id", checkAuth, requirePermission('mantener_jugadores'), 
 playerRoutes.get("/", checkAuth, getPlayers)
 
 
-playerRoutes.get("/:id/export", exportPlayerData)
+// playerRoutes.get("/:id/export", exportPlayerData)
+playerRoutes.get("/:id/export", playerDataExport)

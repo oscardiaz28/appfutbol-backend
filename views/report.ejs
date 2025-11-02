@@ -26,6 +26,12 @@
             margin: 12mm 15mm;
         }
 
+        .text-secondary{
+            padding: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
         .container {
             max-width: 210mm;
             margin: 0 auto;
@@ -529,6 +535,7 @@
             <!-- Gráficos de gastos -->
             <div class="section">
                 <div class="section-header">III. ANÁLISIS GRÁFICO DE GASTOS</div>
+                <p class="text-secondary">Monto total: S/ <%= Math.round(total * 100) / 100 %></p>
                 <div class="section-content">
                     <canvas id="gastosChart" style="max-height: 300px;"></canvas>
                 </div>

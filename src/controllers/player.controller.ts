@@ -21,6 +21,13 @@ export const addPlayer = async (req: AuthRequest<PlayerRequestType>, res: Respon
         if (isPlayerExist) {
             return res.status(400).json({ success: false, message: "La identificación ya ha sido registrada" })
         }
+        if (identificacion.length < 5 || identificacion.length > 8) {
+            return res.status(400).json({
+                success: false,
+                message: "La identificación debe tener entre 5 y 8 caracteres"
+            });
+        }
+
         const newPlayer = await prisma.players.create({
             data: {
                 nombre,
@@ -811,8 +818,10 @@ export const playerDataExport = async (req: Request, res: Response) => {
         `;
 
         const expenses = transformExpenses(result)
+        console.log(expenses)
 
-        // console.log(expenses)
+        const total = expenses.reduce((acc, item: any) => acc + item.total, 0)
+        // console.log(total)
 
         const info = await getPlayerEvaluationReport(prisma, parseInt(id))
 
@@ -843,11 +852,12 @@ export const playerDataExport = async (req: Request, res: Response) => {
             player: datosTemplate.player,
             evaluations: evaluations,
             gastosMensuales: expenses,
-            year: year
+            year: year,
+            total: total
             // capacidadesFisicas: datosTemplate.capacidadesFisicas
         })
 
-        // 3️⃣ Crear PDF con Puppeteer
+        // Crear PDF con Puppeteer
         const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
 
